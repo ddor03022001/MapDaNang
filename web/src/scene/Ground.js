@@ -21,7 +21,7 @@ export class Ground {
     this.group.add(this.cityEnvironment.group);
 
     // Hệ thống sóng biển động Biển Mỹ Khê
-    this.oceanWaves = new OceanWaves({ x: 20.65, y: 0.0, z: 0.45 });
+    this.oceanWaves = new OceanWaves({ x: 20.65, y: 0.0, z: 0.0 });
     this.group.add(this.oceanWaves.group);
   }
 

@@ -476,16 +476,23 @@ export class CityEnvironment {
       }
 
       // 3. Dải phân cách giữa có cỏ xanh và đèn đường (Z = -0.018 đến +0.018)
-      const medGeo = new THREE.BoxGeometry(len, 0.005, 0.036);
+      // Dải phân cách lùi lại 0.35m trước nút giao ngã ba để giao thông thông suốt, không chắn đường rẽ
+      const medStart = isWest ? (xEnd + 0.3) : xStart;
+      const medEnd = isWest ? xStart : (xEnd - 0.35);
+      const medLen = Math.abs(medEnd - medStart);
+      const medCen = (medStart + medEnd) / 2.0;
+
+      const medGeo = new THREE.BoxGeometry(medLen, 0.005, 0.036);
       const medMesh = new THREE.Mesh(medGeo, this.grassMat);
-      medMesh.position.set(xCen, 0.014, 0.0);
+      medMesh.position.set(medCen, 0.014, 0.0);
       roadsGroup.add(medMesh);
 
-      // Cây cảnh & cột đèn trên dải phân cách giữa đại lộ
-      const numLights = Math.floor(len / 1.5);
+      // Cột đèn trên dải phân cách giữa đại lộ (dừng trước ngã ba, không cắm giữa đường)
+      const numLights = Math.floor(medLen / 1.6);
       for (let i = 0; i <= numLights; i++) {
-        const xl = xStart + (i / Math.max(1, numLights)) * (xEnd - xStart);
-        // Cột đèn đôi chiếu sáng
+        const xl = isWest
+          ? (medStart - (i / Math.max(1, numLights)) * medLen)
+          : (medStart + (i / Math.max(1, numLights)) * medLen);
         const poleGeo = new THREE.CylinderGeometry(0.003, 0.004, 0.09, 6);
         const pole = new THREE.Mesh(poleGeo, this.railingMat);
         pole.position.set(xl, 0.055, 0.0);
@@ -498,11 +505,13 @@ export class CityEnvironment {
       }
 
       // 4. Vỉa hè đi bộ 2 bên đại lộ
+      const swLen = isWest ? len : Math.max(0.1, len - 0.12);
+      const swCen = isWest ? xCen : (xStart + swLen / 2.0);
       for (const signZ of [-1.0, 1.0]) {
         const swZ = signZ * 0.178;
-        const swGeo = new THREE.BoxGeometry(len, 0.006, 0.052);
+        const swGeo = new THREE.BoxGeometry(swLen, 0.006, 0.052);
         const swMesh = new THREE.Mesh(swGeo, this.sidewalkMat);
-        swMesh.position.set(xCen, 0.015, swZ);
+        swMesh.position.set(swCen, 0.015, swZ);
         roadsGroup.add(swMesh);
       }
     };
@@ -510,8 +519,9 @@ export class CityEnvironment {
     // A. ĐẠI LỘ NGUYỄN VĂN LINH (BỜ TÂY): Bắt đầu chuẩn xác từ chân dốc Cầu Rồng (X = -4.25 đến -20.0)
     build6LaneAvenue(-4.25, -20.0, true);
 
-    // B. ĐẠI LỘ VÕ VĂN KIỆT (BỜ ĐÔNG): Bắt đầu từ chân dốc Cầu Rồng nối THẲNG RA BIỂN MỸ KHÊ (X = +4.25 đến +20.15)
-    build6LaneAvenue(4.25, 20.15, false);
+    // B. ĐẠI LỘ VÕ VĂN KIỆT (BỜ ĐÔNG): Bắt đầu từ chân dốc Cầu Rồng nối THẲNG RA BIỂN MỸ KHÊ
+    // Nối chuẩn xác vào mép Tây đường Võ Nguyên Giáp tại X = 20.02
+    build6LaneAvenue(4.25, 20.02, false);
 
     // C. ĐƯỜNG LÊ DUẨN (BỜ TÂY): Bắt đầu từ chân dốc Cầu Sông Hàn (X = -3.95 đến -20.0, Z = -12.25)
     addRoad(-11.975, -12.25, 0.22, 16.05, true);
@@ -519,9 +529,9 @@ export class CityEnvironment {
     addStripe(-11.975, -12.25 - 0.05, 16.05, false, true);
     addStripe(-11.975, -12.25 + 0.05, 16.05, false, true);
 
-    // D. ĐẠI LỘ PHẠM VĂN ĐỒNG (BỜ ĐÔNG): Bắt đầu từ Cầu Sông Hàn nối thẳng ra CÔNG VIÊN BIỂN ĐÔNG (X = +3.95 đến +20.15, Z = -12.25)
-    const pvdLen = 20.15 - 3.95;
-    const pvdXCen = (3.95 + 20.15) / 2.0;
+    // D. ĐẠI LỘ PHẠM VĂN ĐỒNG (BỜ ĐÔNG): Bắt đầu từ Cầu Sông Hàn nối thẳng ra CÔNG VIÊN BIỂN ĐÔNG (X = +3.95 đến +20.02, Z = -12.25)
+    const pvdLen = 20.02 - 3.95;
+    const pvdXCen = (3.95 + 20.02) / 2.0;
     // 2 chiều đường xe chạy (Bắc & Nam)
     addRoad(pvdXCen, -12.25 - 0.06, 0.11, pvdLen, true);
     addRoad(pvdXCen, -12.25 + 0.06, 0.11, pvdLen, true);
@@ -531,13 +541,15 @@ export class CityEnvironment {
     addStripe(pvdXCen, -12.25 + 0.025, pvdLen, false, true);
     addStripe(pvdXCen, -12.25 + 0.095, pvdLen, false, true);
     // Dải phân cách giữa có hoa cỏ & đèn đường
-    const pvdMedGeo = new THREE.BoxGeometry(pvdLen, 0.005, 0.024);
+    const pvdMedLen = pvdLen - 0.35;
+    const pvdMedCen = 3.95 + pvdMedLen / 2.0;
+    const pvdMedGeo = new THREE.BoxGeometry(pvdMedLen, 0.005, 0.024);
     const pvdMed = new THREE.Mesh(pvdMedGeo, this.grassMat);
-    pvdMed.position.set(pvdXCen, 0.014, -12.25);
+    pvdMed.position.set(pvdMedCen, 0.014, -12.25);
     roadsGroup.add(pvdMed);
-    const numPvdLights = Math.floor(pvdLen / 1.6);
+    const numPvdLights = Math.floor(pvdMedLen / 1.6);
     for (let i = 0; i <= numPvdLights; i++) {
-      const xl = 3.95 + (i / Math.max(1, numPvdLights)) * pvdLen;
+      const xl = 3.95 + (i / Math.max(1, numPvdLights)) * pvdMedLen;
       const poleGeo = new THREE.CylinderGeometry(0.003, 0.004, 0.09, 6);
       const pole = new THREE.Mesh(poleGeo, this.railingMat);
       pole.position.set(xl, 0.055, -12.25);
@@ -547,12 +559,14 @@ export class CityEnvironment {
       arm.position.set(xl, 0.098, -12.25);
       roadsGroup.add(arm);
     }
-    // Vỉa hè đi bộ 2 bên Phạm Văn Đồng
+    // Vỉa hè đi bộ 2 bên Phạm Văn Đồng (lùi trước ngã ba 0.10m để thông suốt)
+    const pvdSwLen = pvdLen - 0.10;
+    const pvdSwCen = 3.95 + pvdSwLen / 2.0;
     for (const signZ of [-1.0, 1.0]) {
       const swZ = -12.25 + signZ * 0.145;
-      const swGeo = new THREE.BoxGeometry(pvdLen, 0.006, 0.05);
+      const swGeo = new THREE.BoxGeometry(pvdSwLen, 0.006, 0.05);
       const swMesh = new THREE.Mesh(swGeo, this.sidewalkMat);
-      swMesh.position.set(pvdXCen, 0.015, swZ);
+      swMesh.position.set(pvdSwCen, 0.015, swZ);
       roadsGroup.add(swMesh);
     }
 
@@ -567,13 +581,22 @@ export class CityEnvironment {
     // Vạch phân làn trắng
     addStripe(20.08, vngZCen, vngLen, false, false);
     addStripe(20.22, vngZCen, vngLen, false, false);
-    // Vỉa hè phía Tây (mặt tiền các khách sạn & resort)
-    const vngWestSw = new THREE.Mesh(
-      new THREE.BoxGeometry(0.055, 0.006, vngLen),
-      this.sidewalkMat
-    );
-    vngWestSw.position.set(19.98, 0.015, vngZCen);
-    roadsGroup.add(vngWestSw);
+    // Vỉa hè phía Tây (phân đoạn ngắt quãng tại các giao lộ để đường thông thoáng, không chắn lối đi xe)
+    const addVngWestSwSegment = (zFrom, zTo) => {
+      const sLen = Math.abs(zTo - zFrom);
+      const sCen = (zFrom + zTo) / 2.0;
+      const sw = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.006, sLen), this.sidewalkMat);
+      sw.position.set(19.98, 0.015, sCen);
+      roadsGroup.add(sw);
+    };
+    addVngWestSwSegment(-16.0, -12.44); // Bắc Phạm Văn Đồng
+    addVngWestSwSegment(-12.06, -8.62); // Giữa Phạm Văn Đồng & Dương Đình Nghệ
+    addVngWestSwSegment(-8.38, -4.62);  // Giữa Dương Đình Nghệ & Nguyễn Công Trứ
+    addVngWestSwSegment(-4.38, -0.20);  // Giữa Nguyễn Công Trứ & Võ Văn Kiệt
+    addVngWestSwSegment(0.20, 1.70);    // Giữa Võ Văn Kiệt & An Thượng 1
+    addVngWestSwSegment(1.90, 3.10);    // Giữa An Thượng 1 & An Thượng 2
+    addVngWestSwSegment(3.30, 4.70);    // Giữa An Thượng 2 & An Thượng 3
+    addVngWestSwSegment(4.90, 8.0);     // Nam An Thượng 3
     // Phố đi bộ ven biển phía Đông (Seaside Promenade hướng biển Mỹ Khê)
     const vngEastSw = new THREE.Mesh(
       new THREE.BoxGeometry(0.14, 0.006, vngLen),
@@ -667,26 +690,20 @@ export class CityEnvironment {
     rb2.position.set(5.80, 0.016, -12.25);
     roadsGroup.add(rb2);
 
-    // 3. Quảng trường Bùng binh Biển Mỹ Khê (Võ Văn Kiệt - Võ Nguyên Giáp tại X = 20.15, Z = 0.0)
-    const rbBeach = new THREE.Group();
-    rbBeach.position.set(20.15, 0.016, 0.0);
-    const rbBeachIsland = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.008, 28), this.grassMat);
-    rbBeach.add(rbBeachIsland);
-    // Bệ hoa & tượng đài biểu tượng bãi biển
-    const monument = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.02, 0.035, 0.045, 8),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
-    );
-    monument.position.y = 0.025;
-    rbBeach.add(monument);
-    roadsGroup.add(rbBeach);
-
-    // 4. Quảng trường Công viên Biển Đông (Phạm Văn Đồng - Võ Nguyên Giáp tại X = 20.15, Z = -12.25)
-    const sqEastSea = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18, 0.008, 0.26),
+    // 3. Quảng trường Bãi biển Mỹ Khê (nằm hoàn toàn trên phố đi bộ ven biển phía Đông, X = 20.36, Z = 0.0)
+    const sqBeach = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.008, 0.38),
       this.sidewalkMat
     );
-    sqEastSea.position.set(20.25, 0.016, -12.25);
+    sqBeach.position.set(20.36, 0.016, 0.0);
+    roadsGroup.add(sqBeach);
+
+    // 4. Quảng trường Công viên Biển Đông (nằm trên phố đi bộ ven biển phía Đông, X = 20.36, Z = -12.25)
+    const sqEastSea = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.008, 0.38),
+      this.sidewalkMat
+    );
+    sqEastSea.position.set(20.36, 0.016, -12.25);
     roadsGroup.add(sqEastSea);
 
     // Các đường nhánh kết nối cũ bờ Tây (Thái Phiên, Hùng Vương, Quang Trung, Hà Thị Thân):
@@ -1010,6 +1027,7 @@ export class CityEnvironment {
     const beachPalmCount = 32;
     for (let p = 0; p < beachPalmCount; p++) {
       const z = -15.0 + (p / beachPalmCount) * 22.5;
+      if (Math.abs(z) < 0.22 || Math.abs(z - -12.25) < 0.22) continue; // Giữ thông thoáng lối vào quảng trường & tượng đài
       const tBeach = new THREE.Group();
       const trP = new THREE.Mesh(trunkGeo, this.trunkMat);
       trP.position.y = 0.03;
@@ -1275,53 +1293,56 @@ export class CityEnvironment {
 
     // =========================================================================
     // A. BIỂN TÊN ĐƯỜNG TẠI CÁC GIAO LỘ KẾT NỐI BIỂN MỸ KHÊ & BÁN ĐẢO SƠN TRÀ
+    // Toàn bộ cột biển được đặt CHUẨN XÁC TRÊN VỈA HÈ (không cắm trên mặt đường xe chạy)
     // =========================================================================
-    // 1. Ngã ba Biển Mỹ Khê (Võ Văn Kiệt & Võ Nguyên Giáp)
-    addStreetCornerSign(20.0, -0.16, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
-    addStreetCornerSign(20.0,  0.16, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    // 1. Ngã ba Biển Mỹ Khê (Võ Văn Kiệt & Võ Nguyên Giáp - vỉa hè góc Tây Bắc & Tây Nam)
+    addStreetCornerSign(19.82, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    addStreetCornerSign(19.82,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 2. Ngã ba Công viên Biển Đông (Phạm Văn Đồng & Võ Nguyên Giáp)
-    addStreetCornerSign(20.0, -12.40, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
-    addStreetCornerSign(20.0, -12.10, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    // 2. Ngã ba Công viên Biển Đông (Phạm Văn Đồng & Võ Nguyên Giáp - vỉa hè góc Tây Bắc & Tây Nam)
+    addStreetCornerSign(19.82, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    addStreetCornerSign(19.82, -12.04, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 3. Ngã tư Hồ Nghinh - Võ Văn Kiệt
-    addStreetCornerSign(14.20, -0.16, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG HỒ NGHINH');
+    // 3. Ngã tư Hồ Nghinh - Võ Văn Kiệt (vỉa hè góc Tây Bắc & Tây Nam)
+    addStreetCornerSign(14.05, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG HỒ NGHINH');
+    addStreetCornerSign(14.05,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG HỒ NGHINH');
 
-    // 4. Ngã tư Hồ Nghinh - Phạm Văn Đồng
-    addStreetCornerSign(14.20, -12.40, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG HỒ NGHINH');
+    // 4. Ngã tư Hồ Nghinh - Phạm Văn Đồng (vỉa hè góc phố)
+    addStreetCornerSign(14.05, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG HỒ NGHINH');
 
-    // 5. Ngã tư Ngô Quyền - Võ Văn Kiệt (Vòng xuyến Cầu Rồng bờ Đông)
-    addStreetCornerSign(5.80, -0.18, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG NGÔ QUYỀN');
+    // 5. Ngã tư Ngô Quyền - Võ Văn Kiệt (Vòng xuyến Cầu Rồng bờ Đông - vỉa hè góc phố)
+    addStreetCornerSign(5.62, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG NGÔ QUYỀN');
+    addStreetCornerSign(5.62,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG NGÔ QUYỀN');
 
-    // 6. Ngã tư Ngô Quyền - Phạm Văn Đồng (Vòng xuyến Cầu Sông Hàn bờ Đông)
-    addStreetCornerSign(5.80, -12.40, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG NGÔ QUYỀN');
+    // 6. Ngã tư Ngô Quyền - Phạm Văn Đồng (Vòng xuyến Cầu Sông Hàn bờ Đông - vỉa hè góc phố)
+    addStreetCornerSign(5.62, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG NGÔ QUYỀN');
 
-    // 7. Ngã ba Nguyễn Công Trứ - Võ Nguyên Giáp
-    addStreetCornerSign(20.0, -4.50, 'ĐƯỜNG NGUYỄN CÔNG TRỨ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    // 7. Ngã ba Nguyễn Công Trứ - Võ Nguyên Giáp (vỉa hè góc phố)
+    addStreetCornerSign(19.82, -4.62, 'ĐƯỜNG NGUYỄN CÔNG TRỨ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 8. Ngã ba Dương Đình Nghệ - Võ Nguyên Giáp
-    addStreetCornerSign(20.0, -8.50, 'ĐƯỜNG DƯƠNG ĐÌNH NGHỆ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    // 8. Ngã ba Dương Đình Nghệ - Võ Nguyên Giáp (vỉa hè góc phố)
+    addStreetCornerSign(19.82, -8.62, 'ĐƯỜNG DƯƠNG ĐÌNH NGHỆ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 9. Khu Phố Du lịch An Thượng - Võ Nguyên Giáp
-    addStreetCornerSign(20.0, 2.50, 'PHỐ DU LỊCH AN THƯỢNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
+    // 9. Khu Phố Du lịch An Thượng - Võ Nguyên Giáp (vỉa hè góc phố)
+    addStreetCornerSign(19.82, 2.38, 'PHỐ DU LỊCH AN THƯỢNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 10. Phố Trần Bạch Đằng (Khu phố Tây)
-    addStreetCornerSign(18.20, 2.50, 'PHỐ AN THƯỢNG', 'ĐƯỜNG TRẦN BẠCH ĐẰNG');
+    // 10. Phố Trần Bạch Đằng (Khu phố Tây - vỉa hè góc phố)
+    addStreetCornerSign(18.05, 2.38, 'PHỐ AN THƯỢNG', 'ĐƯỜNG TRẦN BẠCH ĐẰNG');
 
     // =========================================================================
     // B. BIỂN TÊN ĐƯỜNG TẠI CÁC ĐẦU CẦU & BỜ SÔNG HÀN
     // =========================================================================
-    // 11. Cầu Rồng bờ Đông (Võ Văn Kiệt - Trần Hưng Đạo)
-    addStreetCornerSign(4.30, 0.18, 'ĐẠI LỘ VÕ VĂN KIỆT', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
+    // 11. Cầu Rồng bờ Đông (Võ Văn Kiệt - Trần Hưng Đạo - vỉa hè góc bờ sông)
+    addStreetCornerSign(4.20, 0.22, 'ĐẠI LỘ VÕ VĂN KIỆT', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
 
-    // 12. Cầu Rồng bờ Tây (Nguyễn Văn Linh - Bạch Đằng - Hải Châu)
-    addStreetCornerSign(-4.30, 0.18, 'ĐẠI LỘ NGUYỄN VĂN LINH', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
+    // 12. Cầu Rồng bờ Tây (Nguyễn Văn Linh - Bạch Đằng - Hải Châu - vỉa hè góc bờ sông)
+    addStreetCornerSign(-4.20, 0.22, 'ĐẠI LỘ NGUYỄN VĂN LINH', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
 
-    // 13. Cầu Sông Hàn bờ Đông (Phạm Văn Đồng - Trần Hưng Đạo)
-    addStreetCornerSign(4.00, -12.40, 'ĐẠI LỘ PHẠM VĂN ĐỒNG', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
+    // 13. Cầu Sông Hàn bờ Đông (Phạm Văn Đồng - Trần Hưng Đạo - vỉa hè góc bờ sông)
+    addStreetCornerSign(3.90, -12.46, 'ĐẠI LỘ PHẠM VĂN ĐỒNG', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
 
-    // 14. Cầu Sông Hàn bờ Tây (Lê Duẩn - Bạch Đằng - Hải Châu)
-    addStreetCornerSign(-4.00, -12.40, 'ĐƯỜNG LÊ DUẨN', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
+    // 14. Cầu Sông Hàn bờ Tây (Lê Duẩn - Bạch Đằng - Hải Châu - vỉa hè góc bờ sông)
+    addStreetCornerSign(-3.90, -12.46, 'ĐƯỜNG LÊ DUẨN', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
 
     // =========================================================================
     // C. CÁC BIỂN GIÁ LONG MÔN TRÊN CAO (OVERHEAD GANTRY SIGNS)
@@ -1332,7 +1353,7 @@ export class CityEnvironment {
       'BIỂN MỸ KHÊ | MY KHE BEACH',
       'ĐẠI LỘ VÕ VĂN KIỆT (200m)',
       '⬅ BÃI PHẠM VĂN ĐỒNG   ⬆ BÃI MỸ KHÊ   BÃI T20 ➡',
-      0.36
+      0.38
     );
 
     // 2. Giá long môn trên Phạm Văn Đồng hướng ra biển (X = 18.2, Z = -12.25)
@@ -1341,7 +1362,7 @@ export class CityEnvironment {
       'CÔNG VIÊN BIỂN ĐÔNG',
       'EAST SEA PARK',
       '⬅ BÁN ĐẢO SƠN TRÀ   ⬆ QUẢNG TRƯỜNG   BIỂN MỸ KHÊ ➡',
-      0.34
+      0.36
     );
 
     // 3. Giá long môn trên Đường ven biển Võ Nguyên Giáp (X = 20.15, Z = -6.0)
@@ -1350,7 +1371,7 @@ export class CityEnvironment {
       'ĐƯỜNG VÕ NGUYÊN GIÁP',
       'TUYẾN ĐƯỜNG VEN BIỂN ĐÀ NẴNG',
       '⬆ SƠN TRÀ / HOÀNG SA   |   BIỂN MỸ KHÊ / HỘI AN ⬇',
-      0.30
+      0.36
     );
 
     // 4. Giá long môn trên Võ Văn Kiệt hướng về Cầu Rồng & TTTP (X = 6.8, Z = 0.0)
@@ -1359,7 +1380,7 @@ export class CityEnvironment {
       'CẦU RỒNG - TRUNG TÂM TP',
       'ĐẠI LỘ VÕ VĂN KIỆT',
       '⬅ CẦU SÔNG HÀN   ⬆ CẦU RỒNG   CẦU TRẦN THỊ LÝ ➡',
-      0.36
+      0.38
     );
 
     // 5. Giá long môn trên Nguyễn Văn Linh bờ Tây hướng sang Cầu Rồng (X = -6.5, Z = 0.0)
@@ -1368,14 +1389,17 @@ export class CityEnvironment {
       'CẦU RỒNG - BIỂN MỸ KHÊ',
       'ĐẠI LỘ NGUYỄN VĂN LINH',
       '⬅ SÂN BAY ĐÀ NẴNG   ⬆ CẦU RỒNG   BẢO TÀNG CHĂM ➡',
-      0.36
+      0.38
     );
 
     // =========================================================================
     // D. TƯỢNG ĐÀI CHÀO MỪNG BIỂN MỸ KHÊ (BEACH WELCOME PYLON)
+    // Đặt trang trọng trên Quảng trường phố đi bộ ven biển phía Đông, hướng thẳng mặt ra Đại lộ Võ Văn Kiệt
     // =========================================================================
     const welcomePylon = new THREE.Group();
-    welcomePylon.position.set(20.30, 0.015, 0.0);
+    welcomePylon.position.set(20.40, 0.015, 0.0);
+    welcomePylon.rotation.y = -Math.PI / 2; // Hướng mặt về phía Tây đón xe từ Cầu Rồng tới
+
     const wTex = createSignTex({
       title: 'BIỂN MỸ KHÊ',
       sub: 'MY KHE BEACH ★ TOP 6 PLANET',
@@ -1471,17 +1495,17 @@ export class CityEnvironment {
         this.vehicles.push({
           mesh: vehObj,
           corridor: 'cau-rong',
-          dir: -1, // Hướng Tây
+          dir: -1, // Hướng Tây (từ bờ biển hướng về Cầu Rồng)
           laneZ: laneZ,
-          x: 19.5 - k * 8.5 - (idx * 2.8),
+          x: 19.4 - k * 8.5 - (idx * 2.8),
           speed: 1.6 + Math.random() * 0.8,
           xMin: -19.5,
-          xMax: 19.8
+          xMax: 19.65
         });
       }
     });
 
-    // 3 làn hướng Đông (X từ -18 lên +19.8 thẳng ra Biển Mỹ Khê): Z = +0.045, +0.085, +0.125
+    // 3 làn hướng Đông (X từ -18 lên +19.65 thẳng ra Biển Mỹ Khê): Z = +0.045, +0.085, +0.125
     const eastLanes = [0.045, 0.085, 0.125];
     eastLanes.forEach((laneZ, idx) => {
       for (let k = 0; k < 4; k++) {
@@ -1498,7 +1522,7 @@ export class CityEnvironment {
           x: -18.0 + k * 8.5 + (idx * 2.8),
           speed: 1.6 + Math.random() * 0.8,
           xMin: -19.5,
-          xMax: 19.8
+          xMax: 19.65
         });
       }
     });
@@ -1516,7 +1540,7 @@ export class CityEnvironment {
         x: 18.5 - k * 8.5,
         speed: 1.4 + Math.random() * 0.6,
         xMin: -19.0,
-        xMax: 19.8
+        xMax: 19.65
       });
 
       // Hướng Đông ra biển
@@ -1530,7 +1554,7 @@ export class CityEnvironment {
         x: -17.0 + k * 8.5,
         speed: 1.4 + Math.random() * 0.6,
         xMin: -19.0,
-        xMax: 19.8
+        xMax: 19.65
       });
     }
 

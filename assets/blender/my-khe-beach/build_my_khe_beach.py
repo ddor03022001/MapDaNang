@@ -156,17 +156,17 @@ def build_coastal_terrain(collection, mats):
     # X: -130m (sau dãy resort) -> -45m (đại lộ) -> -15m (quảng trường) -> +55m (bãi cát khô)
     # -> +85m (mép nước) -> +320m (đáy biển Đông)
     x_profiles = [
-        (-135.0, 3.8),   # Sau khách sạn
-        ( -75.0, 3.8),   # Mép Tây đại lộ
-        ( -45.0, 3.6),   # Mép Đông đại lộ
-        ( -15.0, 3.4),   # Mép quảng trường / bắt đầu bãi cát
-        (  15.0, 2.5),   # Bãi cát khô cao
-        (  50.0, 1.2),   # Bãi cát khô thoai thoải
-        (  75.0, 0.2),   # Bờ cát ướt mép sóng
-        (  95.0, -0.6),  # Nước ngập cạn (mép sóng vỗ)
-        ( 145.0, -2.2),  # Biển thoai thoải
-        ( 220.0, -4.5),  # Biển sâu ngoài khơi
-        ( 320.0, -6.8),  # Đáy biển xa bờ
+        (-135.0, 1.20),   # Sau khách sạn (khớp chuẩn mặt đất đô thị Y = 0.012)
+        ( -75.0, 1.20),   # Mép Tây đại lộ Võ Nguyên Giáp
+        ( -45.0, 1.20),   # Mép Đông đại lộ
+        ( -15.0, 1.15),   # Mép quảng trường / bắt đầu bãi cát
+        (  15.0, 0.85),   # Bãi cát khô cao
+        (  50.0, 0.45),   # Bãi cát khô thoai thoải
+        (  75.0, 0.10),   # Bờ cát ướt mép sóng
+        (  95.0, -0.25),  # Nước ngập cạn (mép sóng vỗ)
+        ( 145.0, -1.20),  # Biển thoai thoải
+        ( 220.0, -2.50),  # Biển sâu ngoài khơi
+        ( 320.0, -4.50),  # Đáy biển xa bờ
     ]
 
     steps_y = 35
@@ -216,10 +216,10 @@ def build_coastal_terrain(collection, mats):
         curv1 = math.sin(y1 * 0.018) * 6.5 + math.cos(y1 * 0.04) * 2.8
         curv2 = math.sin(y2 * 0.018) * 6.5 + math.cos(y2 * 0.04) * 2.8
 
-        w1 = bm_wet.verts.new(( 65.0 + curv1, y1, 0.42))
-        w2 = bm_wet.verts.new(( 65.0 + curv2, y2, 0.42))
-        w3 = bm_wet.verts.new(( 92.0 + curv2, y2, -0.45))
-        w4 = bm_wet.verts.new(( 92.0 + curv1, y1, -0.45))
+        w1 = bm_wet.verts.new(( 65.0 + curv1, y1, 0.20))
+        w2 = bm_wet.verts.new(( 65.0 + curv2, y2, 0.20))
+        w3 = bm_wet.verts.new(( 92.0 + curv2, y2, -0.25))
+        w4 = bm_wet.verts.new(( 92.0 + curv1, y1, -0.25))
         bm_wet.faces.new([w1, w2, w3, w4])
 
     bmesh.ops.recalc_face_normals(bm_wet, faces=bm_wet.faces[:])
@@ -241,19 +241,26 @@ def build_boulevard_and_park(collection, mats):
     bm_stripes = bmesh.new()
     bm_park = bmesh.new()
 
-    # 1. Mặt đường đại lộ Võ Nguyên Giáp (X: -70m đến -48m, rộng 22m, Z = 3.82m)
-    r1 = bm_road.verts.new((-70.0, -HALF_COAST, 3.82))
-    r2 = bm_road.verts.new((-70.0,  HALF_COAST, 3.82))
-    r3 = bm_road.verts.new((-48.0,  HALF_COAST, 3.82))
-    r4 = bm_road.verts.new((-48.0, -HALF_COAST, 3.82))
+    # 1. Mặt đường đại lộ Võ Nguyên Giáp (X: -70m đến -48m, rộng 22m, Z = 1.20m)
+    r1 = bm_road.verts.new((-70.0, -HALF_COAST, 1.20))
+    r2 = bm_road.verts.new((-70.0,  HALF_COAST, 1.20))
+    r3 = bm_road.verts.new((-48.0,  HALF_COAST, 1.20))
+    r4 = bm_road.verts.new((-48.0, -HALF_COAST, 1.20))
     bm_road.faces.new([r1, r2, r3, r4])
+
+    # 1b. Lối vào ngã ba Đại lộ Võ Văn Kiệt nối thẳng từ phía Tây (X: -135m đến -70m, Y: -25m đến +25m, Z = 1.20m)
+    vvk1 = bm_road.verts.new((-135.0, -25.0, 1.20))
+    vvk2 = bm_road.verts.new((-70.0,  -25.0, 1.20))
+    vvk3 = bm_road.verts.new((-70.0,   25.0, 1.20))
+    vvk4 = bm_road.verts.new((-135.0,  25.0, 1.20))
+    bm_road.faces.new([vvk1, vvk2, vvk3, vvk4])
 
     # Vạch tim đường vàng đôi & vạch phân làn trắng
     for z_side in [-0.25, 0.25]:
-        v1 = bm_stripes.verts.new((-59.0 + z_side, -HALF_COAST, 3.825))
-        v2 = bm_stripes.verts.new((-59.0 + z_side,  HALF_COAST, 3.825))
-        v3 = bm_stripes.verts.new((-59.0 + z_side + 0.18,  HALF_COAST, 3.825))
-        v4 = bm_stripes.verts.new((-59.0 + z_side + 0.18, -HALF_COAST, 3.825))
+        v1 = bm_stripes.verts.new((-59.0 + z_side, -HALF_COAST, 1.205))
+        v2 = bm_stripes.verts.new((-59.0 + z_side,  HALF_COAST, 1.205))
+        v3 = bm_stripes.verts.new((-59.0 + z_side + 0.18,  HALF_COAST, 1.205))
+        v4 = bm_stripes.verts.new((-59.0 + z_side + 0.18, -HALF_COAST, 1.205))
         bm_stripes.faces.new([v1, v2, v3, v4])
 
     for lane_x in [-64.5, -53.5]:
@@ -261,17 +268,17 @@ def build_boulevard_and_park(collection, mats):
         for d in range(num_d):
             y_s = -HALF_COAST + d * 12.0
             y_e = y_s + 6.0
-            d1 = bm_stripes.verts.new((lane_x - 0.1, y_s, 3.825))
-            d2 = bm_stripes.verts.new((lane_x - 0.1, y_e, 3.825))
-            d3 = bm_stripes.verts.new((lane_x + 0.1, y_e, 3.825))
-            d4 = bm_stripes.verts.new((lane_x + 0.1, y_s, 3.825))
+            d1 = bm_stripes.verts.new((lane_x - 0.1, y_s, 1.205))
+            d2 = bm_stripes.verts.new((lane_x - 0.1, y_e, 1.205))
+            d3 = bm_stripes.verts.new((lane_x + 0.1, y_e, 1.205))
+            d4 = bm_stripes.verts.new((lane_x + 0.1, y_s, 1.205))
             bm_stripes.faces.new([d1, d2, d3, d4])
 
     # 2. Quảng trường Công viên Biển Đông & Lối dạo bộ lát đá (X: -48m đến -15m)
-    p1 = bm_park.verts.new((-48.0, -HALF_COAST, 3.85))
-    p2 = bm_park.verts.new((-48.0,  HALF_COAST, 3.85))
-    p3 = bm_park.verts.new((-15.0,  HALF_COAST, 3.45))
-    p4 = bm_park.verts.new((-15.0, -HALF_COAST, 3.45))
+    p1 = bm_park.verts.new((-48.0, -HALF_COAST, 1.22))
+    p2 = bm_park.verts.new((-48.0,  HALF_COAST, 1.22))
+    p3 = bm_park.verts.new((-15.0,  HALF_COAST, 1.16))
+    p4 = bm_park.verts.new((-15.0, -HALF_COAST, 1.16))
     bm_park.faces.new([p1, p2, p3, p4])
 
     # Thảm cỏ xanh xen kẽ các bồn hoa công viên
@@ -279,10 +286,10 @@ def build_boulevard_and_park(collection, mats):
     lawn_len = COAST_LEN / num_lawns
     for i in range(num_lawns):
         y_c = -HALF_COAST + i * lawn_len + lawn_len * 0.5
-        g1 = bm_park.verts.new((-44.0, y_c - 16.0, 3.86))
-        g2 = bm_park.verts.new((-44.0, y_c + 16.0, 3.86))
-        g3 = bm_park.verts.new((-22.0, y_c + 16.0, 3.65))
-        g4 = bm_park.verts.new((-22.0, y_c - 16.0, 3.65))
+        g1 = bm_park.verts.new((-44.0, y_c - 16.0, 1.23))
+        g2 = bm_park.verts.new((-44.0, y_c + 16.0, 1.23))
+        g3 = bm_park.verts.new((-22.0, y_c + 16.0, 1.20))
+        g4 = bm_park.verts.new((-22.0, y_c - 16.0, 1.20))
         bm_park.faces.new([g1, g2, g3, g4])
 
     bmesh.ops.recalc_face_normals(bm_road, faces=bm_road.faces[:])
@@ -328,13 +335,13 @@ def build_coconut_palms(collection, mats):
         # 2 hàng dừa
         x_pos1 = -28.0 + math.sin(i * 1.5) * 4.0
         x_pos2 = -5.0 + math.cos(i * 1.8) * 8.0
-        palm_locations.append((x_pos1, y_pos, 3.6))
-        palm_locations.append((x_pos2, y_pos + 6.0, 3.0))
+        palm_locations.append((x_pos1, y_pos, 1.22))
+        palm_locations.append((x_pos2, y_pos + 6.0, 1.05))
 
     for px, py, pz in palm_locations:
         # 1. Thân dừa uốn cong tự nhiên hướng ra phía biển (+X)
         trunk_h = 7.5 + math.sin(px + py) * 1.5
-        lean_angle = 0.15 + (px / 50.0) * 0.15 # Nghiêng nhẹ ra biển
+        lean_angle = 0.15 + (px / 50.0) * 0.15
         steps = 8
         r_bot = 0.32
         r_top = 0.20
@@ -343,7 +350,6 @@ def build_coconut_palms(collection, mats):
         for s in range(steps + 1):
             t = s / steps
             zh = pz + t * trunk_h
-            # Đường cong parabol của thân dừa
             lean_x = px + math.sin(t * math.pi * 0.5) * lean_angle * trunk_h
             lean_y = py + math.sin(t * 1.2) * 0.4
             rad = r_bot * (1.0 - t * 0.4)
@@ -371,7 +377,6 @@ def build_coconut_palms(collection, mats):
         frond_len = 4.2
         for f in range(num_fronds):
             f_ang = f * (2 * math.pi / num_fronds) + (px * 0.1)
-            # Tàu lá dừa cong vòm xuống
             f_end_x = top_cx + math.cos(f_ang) * frond_len
             f_end_y = top_cy + math.sin(f_ang) * frond_len
             f_end_z = top_cz - 1.2
@@ -428,10 +433,8 @@ def build_beach_amenities(collection, mats):
         y_cen = -HALF_COAST + 35.0 + c * (COAST_LEN - 70.0) / num_clusters
         for row in range(3):
             x_u = 22.0 + row * 12.0
-            # Cao độ bãi cát tại vị trí ô
-            z_u = 2.4 - row * 0.55
+            z_u = 0.80 - row * 0.20
 
-            # Cột chống ô dù
             v1 = bm_wood.verts.new((x_u - 0.05, y_cen - 0.05, z_u))
             v2 = bm_wood.verts.new((x_u + 0.05, y_cen - 0.05, z_u))
             v3 = bm_wood.verts.new((x_u + 0.05, y_cen + 0.05, z_u))
@@ -442,7 +445,6 @@ def build_beach_amenities(collection, mats):
             bm_wood.faces.new([v3, v4, v5])
             bm_wood.faces.new([v4, v1, v5])
 
-            # Tán nón ô dù sắc màu
             bm_target = [bm_umb_red, bm_umb_blue, bm_umb_yellow][(c + row) % 3]
             r_umb = 1.85
             apex = bm_target.verts.new((x_u, y_cen, z_u + 2.55))
@@ -457,7 +459,6 @@ def build_beach_amenities(collection, mats):
                 k2 = (k + 1) % steps_u
                 bm_target.faces.new([apex, u_ring[k], u_ring[k2]])
 
-            # Giường tắm nắng dưới bóng râm
             for side in [-1.0, 1.0]:
                 yb = y_cen + side * 1.1
                 b1 = bm_wood.verts.new((x_u - 1.0, yb - 0.35, z_u + 0.28))
@@ -467,18 +468,16 @@ def build_beach_amenities(collection, mats):
                 bm_wood.faces.new([b1, b2, b3, b4])
 
     # B. THÁP CANH CỨU HỘ BÃI BIỂN (LIFEGUARD TOWERS)
-    # Đặt 4 tháp gỗ quan sát bờ biển tại X ≈ 52m (gần mép nước)
     tower_positions = [
-        (50.0, -220.0, 1.1),
-        (52.0,  -70.0, 1.0),
-        (51.0,   80.0, 1.0),
-        (50.0,  230.0, 1.1),
+        (50.0, -220.0, 0.40),
+        (52.0,  -70.0, 0.38),
+        (51.0,   80.0, 0.38),
+        (50.0,  230.0, 0.40),
     ]
 
     for tx, ty, tz in tower_positions:
         tw_w = 2.4
         tw_h = 4.2
-        # 4 chân tháp
         posts = [
             (tx - tw_w/2, ty - tw_w/2),
             (tx + tw_w/2, ty - tw_w/2),
@@ -498,14 +497,12 @@ def build_beach_amenities(collection, mats):
             p4 = bm_wood.verts.new((tpx - 0.08, tpy + 0.08, tz + tw_h))
             bm_wood.faces.new([p1, p2, p3, p4])
 
-        # Sàn quan sát trên cao
         s1 = bm_wood.verts.new((tx - tw_w*0.45, ty - tw_w*0.45, tz + tw_h))
         s2 = bm_wood.verts.new((tx + tw_w*0.45, ty - tw_w*0.45, tz + tw_h))
         s3 = bm_wood.verts.new((tx + tw_w*0.45, ty + tw_w*0.45, tz + tw_h))
         s4 = bm_wood.verts.new((tx - tw_w*0.45, ty + tw_w*0.45, tz + tw_h))
         bm_wood.faces.new([s1, s2, s3, s4])
 
-        # Mái che chòi canh đỏ trắng
         apex_t = bm_umb_red.verts.new((tx, ty, tz + tw_h + 1.8))
         m1 = bm_umb_red.verts.new((tx - tw_w*0.55, ty - tw_w*0.55, tz + tw_h + 0.9))
         m2 = bm_umb_red.verts.new((tx + tw_w*0.55, ty - tw_w*0.55, tz + tw_h + 0.9))
@@ -516,13 +513,12 @@ def build_beach_amenities(collection, mats):
         bm_umb_red.faces.new([apex_t, m3, m4])
         bm_umb_red.faces.new([apex_t, m4, m1])
 
-    # C. THUYỀN THÚNG TRE TRÒN TRUYỀN THỐNG ĐÀ NẴNG (ROUND CORACLE BOATS)
-    # Đặt những chiếc thúng tròn của ngư dân đỗ trên bãi cát ven mép sóng (X ≈ 56m)
+    # C. THUYỀN THÚNG TRE TRÒN TRUYỀN THỐNG ĐÀ NẴNG
     coracle_positions = [
-        (56.0, -180.0, 0.9), (58.0, -175.0, 0.8), (55.0, -168.0, 0.9),
-        (54.0,  -40.0, 0.9), (57.0,  -35.0, 0.8), (56.0,  -30.0, 0.9), (58.0, -25.0, 0.8),
-        (55.0,  110.0, 0.9), (57.0,  115.0, 0.8), (54.0,  122.0, 0.9),
-        (56.0,  270.0, 0.9), (58.0,  275.0, 0.8),
+        (56.0, -180.0, 0.35), (58.0, -175.0, 0.32), (55.0, -168.0, 0.35),
+        (54.0,  -40.0, 0.35), (57.0,  -35.0, 0.32), (56.0,  -30.0, 0.35), (58.0, -25.0, 0.32),
+        (55.0,  110.0, 0.35), (57.0,  115.0, 0.32), (54.0,  122.0, 0.35),
+        (56.0,  270.0, 0.35), (58.0,  275.0, 0.32),
     ]
 
     for cx, cy, cz in coracle_positions:
@@ -535,21 +531,17 @@ def build_beach_amenities(collection, mats):
         rim_ring = []
         for k in range(steps_c):
             ang = k * (2 * math.pi / steps_c)
-            # Vòng giữa
             mx = cx + math.cos(ang) * (r_boat * 0.75)
             my = cy + math.sin(ang) * (r_boat * 0.75)
             mid_ring.append(bm_coracle.verts.new((mx, my, cz + depth * 0.45)))
-            # Vành thúng
             rx = cx + math.cos(ang) * r_boat
             ry = cy + math.sin(ang) * r_boat
             rim_ring.append(bm_coracle.verts.new((rx, ry, cz + depth)))
 
-            # Vành tròn xanh viền ngoài (Rim on bm_rim)
             vx1 = cx + math.cos(ang) * (r_boat + 0.08)
             vy1 = cy + math.sin(ang) * (r_boat + 0.08)
             vx2 = cx + math.cos(ang) * (r_boat - 0.04)
             vy2 = cy + math.sin(ang) * (r_boat - 0.04)
-            # rim vertices
             rv1 = bm_rim.verts.new((vx1, vy1, cz + depth - 0.05))
             rv2 = bm_rim.verts.new((vx1, vy1, cz + depth + 0.05))
             rv3 = bm_rim.verts.new((vx2, vy2, cz + depth + 0.05))
@@ -561,14 +553,12 @@ def build_beach_amenities(collection, mats):
             bm_coracle.faces.new([b_base, mid_ring[k], mid_ring[k2]])
             bm_coracle.faces.new([mid_ring[k], rim_ring[k], rim_ring[k2], mid_ring[k2]])
 
-        # Thanh đòn ngang để chèo thuyền
         th1 = bm_wood.verts.new((cx - r_boat*0.88, cy - 0.12, cz + depth - 0.08))
         th2 = bm_wood.verts.new((cx + r_boat*0.88, cy - 0.12, cz + depth - 0.08))
         th3 = bm_wood.verts.new((cx + r_boat*0.88, cy + 0.12, cz + depth - 0.08))
         th4 = bm_wood.verts.new((cx - r_boat*0.88, cy + 0.12, cz + depth - 0.08))
         bm_wood.faces.new([th1, th2, th3, th4])
 
-    # Build meshes
     bmesh.ops.recalc_face_normals(bm_wood, faces=bm_wood.faces[:])
     mesh_w = bpy.data.meshes.new("my-khe_beach-wood_mesh")
     bm_wood.to_mesh(mesh_w)
@@ -578,7 +568,6 @@ def build_beach_amenities(collection, mats):
     obj_w.data.materials.append(mats["wood"])
     link_to_collection(obj_w, collection)
 
-    # Ô dù đỏ, xanh, vàng
     for bm_u, name, mat_name in [
         (bm_umb_red, "my-khe_umb-red", "umbrella_red"),
         (bm_umb_blue, "my-khe_umb-blue", "umbrella_blue"),
@@ -632,7 +621,6 @@ def build_ocean_and_waves(collection, mats):
         row = []
         for ix in range(steps_x + 1):
             x = 72.0 + ix * dx + (curv * (1.0 - ix / steps_x))
-            # Sóng biển nhấp nhô 3D
             wave_h = math.sin(x * 0.08 + y * 0.05) * 0.28 + math.cos(x * 0.15) * 0.15
             row.append(bm_water.verts.new((x, y, wave_h)))
         water_grid.append(row)
@@ -645,8 +633,7 @@ def build_ocean_and_waves(collection, mats):
             v4 = water_grid[iy][ix + 1]
             bm_water.faces.new([v1, v2, v3, v4])
 
-    # 2. Các dải sóng biển cuộn bờ với bọt trắng xóa (Breaking Wave Foam Ribbons)
-    # 4 đợt sóng song song tiến dần vào bờ cát
+    # 2. Các dải sóng biển cuộn bờ với bọt trắng xóa
     wave_distances = [82.0, 118.0, 168.0, 235.0]
     for w_idx, base_dist in enumerate(wave_distances):
         foam_w = 4.5 + w_idx * 1.5
@@ -661,7 +648,6 @@ def build_ocean_and_waves(collection, mats):
             xw1 = base_dist + curv1
             xw2 = base_dist + curv2
 
-            # Dải bọt sóng cuộn nhô cao
             f1 = bm_foam.verts.new((xw1 - foam_w * 0.6, y1, crest_h * 0.6))
             f2 = bm_foam.verts.new((xw2 - foam_w * 0.6, y2, crest_h * 0.6))
             f3 = bm_foam.verts.new((xw2 + foam_w * 0.4, y2, crest_h + 0.15))
@@ -697,21 +683,27 @@ def build_coastal_resorts(collection, mats):
     bm_glass = bmesh.new()
 
     # Dãy cao ốc phía Tây đường Võ Nguyên Giáp (X: -125m đến -78m)
+    # LƯU Ý QUAN TRỌNG: Khoảng mở giữa y = -40m đến +40m (rộng 80m) được giữ THÔNG THOÁNG TUYỆT ĐỐI
+    # để Đại lộ Võ Văn Kiệt kết nối thẳng ra Quảng trường Biển Mỹ Khê, không có tòa nhà nào chắn ngang đường!
     hotels = [
         # x, y, width, depth, height
+        # PHÂN KHU BẮC (y <= -50m, phía Bắc ngã ba Võ Văn Kiệt)
         (-102.0, -280.0, 38.0, 48.0, 58.0), # Muong Thanh Luxury Danang style
-        (-105.0, -210.0, 32.0, 42.0, 72.0), # Khách sạn tháp kính 25 tầng
-        (-100.0, -145.0, 44.0, 50.0, 48.0), # Resort hướng biển
-        (-104.0,  -80.0, 36.0, 45.0, 85.0), # A La Carte Beach Hotel style
-        (-108.0,  -15.0, 40.0, 48.0, 65.0), # Khách sạn quảng trường biển
-        (-102.0,   55.0, 35.0, 42.0, 92.0), # Tháp cao tầng 30 tầng
-        (-106.0,  125.0, 42.0, 52.0, 55.0), # Danang Beach Condotel
-        (-100.0,  195.0, 38.0, 44.0, 78.0), # Luxury Hotel
-        (-105.0,  265.0, 45.0, 48.0, 60.0), # Beachfront Resort
+        (-105.0, -215.0, 32.0, 42.0, 72.0), # Khách sạn tháp kính 25 tầng
+        (-100.0, -155.0, 44.0, 46.0, 52.0), # Resort hướng biển
+        (-104.0,  -98.0, 36.0, 42.0, 85.0), # A La Carte Beach Hotel style
+        (-106.0,  -55.0, 36.0, 30.0, 68.0), # Khách sạn góc Bắc ngã ba Võ Văn Kiệt (kết thúc tại y = -40m)
+
+        # PHÂN KHU NAM (y >= +50m, phía Nam ngã ba Võ Văn Kiệt)
+        (-106.0,   55.0, 36.0, 30.0, 75.0), # Khách sạn góc Nam ngã ba Võ Văn Kiệt (bắt đầu từ y = +40m)
+        (-102.0,   98.0, 35.0, 42.0, 92.0), # Tháp cao tầng 30 tầng
+        (-106.0,  155.0, 42.0, 46.0, 55.0), # Danang Beach Condotel
+        (-100.0,  215.0, 38.0, 44.0, 78.0), # Luxury Hotel
+        (-105.0,  275.0, 45.0, 48.0, 60.0), # Beachfront Resort
     ]
 
     for hx, hy, hw, hd, hh in hotels:
-        z_base = 3.8
+        z_base = 1.20
         # Khối thân khách sạn
         v1 = bm_hotel.verts.new((hx - hw/2, hy - hd/2, z_base))
         v2 = bm_hotel.verts.new((hx + hw/2, hy - hd/2, z_base))

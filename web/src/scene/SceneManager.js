@@ -182,8 +182,8 @@ export class SceneManager {
       },
       'my-khe': {
         // Góc nhìn toàn cảnh Biển Mỹ Khê: cát trắng mịn, rặng dừa, tháp cứu hộ, thuyền thúng, sóng biển và trục đường Võ Văn Kiệt - Võ Nguyên Giáp
-        pos: new THREE.Vector3(23.8, 2.0, 4.2),
-        target: new THREE.Vector3(20.65, 0.18, 0.45)
+        pos: new THREE.Vector3(23.6, 2.0, 3.8),
+        target: new THREE.Vector3(20.65, 0.18, 0.0)
       }
     };
 
