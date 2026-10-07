@@ -91,6 +91,16 @@ function setupUI(sceneManager, dragonEffects, ground, getBridgeModel) {
         <div class="stat-item"><div class="stat-label">Tòa nhà cao nhất</div><div class="stat-val">TTHC 34 tầng (167m)</div></div>
         <div class="stat-item"><div class="stat-label">Công viên biểu tượng</div><div class="stat-val">Mái vòm APEC • Cầu Tình Yêu</div></div>
       `;
+    } else if (type === 'my-khe') {
+      cardTitle.innerHTML = 'Biển Mỹ Khê <span>🏖️</span>';
+      cardSub.textContent = 'My Khe Beach • Top 6 bãi biển quyến rũ nhất hành tinh';
+      cardDesc.textContent = 'Bãi biển nổi tiếng thế giới được tạp chí Forbes vinh danh với bờ cát trắng mịn thoai thoải, làn nước trong xanh màu ngọc bích, rặng dừa nghiêng bóng mát và sóng biển dạt dào vỗ bờ.';
+      cardStats.innerHTML = `
+        <div class="stat-item"><div class="stat-label">Bờ biển Đà Nẵng</div><div class="stat-val">Dài ~10 km (biển Mỹ Khê)</div></div>
+        <div class="stat-item"><div class="stat-label">Bờ cát & Sóng biển</div><div class="stat-val">Cát trắng mịn • Sóng Gerstner</div></div>
+        <div class="stat-item"><div class="stat-label">Vinh danh Forbes</div><div class="stat-val">Top 6 đẹp nhất hành tinh</div></div>
+        <div class="stat-item"><div class="stat-label">Đặc trưng văn hóa</div><div class="stat-val">Thuyền thúng tre • Rặng dừa</div></div>
+      `;
     } else {
       cardTitle.innerHTML = 'Cầu Rồng Đà Nẵng <span>⭐</span>';
       cardSub.textContent = 'Dragon Bridge • Biểu tượng sông Hàn';
@@ -112,7 +122,8 @@ function setupUI(sceneManager, dragonEffects, ground, getBridgeModel) {
     'cam-deck': 'deck',
     'cam-river': 'river',
     'cam-song-han': 'song-han',
-    'cam-city': 'city'
+    'cam-city': 'city',
+    'cam-my-khe': 'my-khe'
   };
 
   const allCamBtns = Object.keys(camButtons).map(id => document.getElementById(id)).filter(Boolean);

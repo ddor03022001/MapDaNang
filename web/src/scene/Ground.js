@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import { CityEnvironment } from './CityEnvironment.js';
+import { OceanWaves } from './OceanWaves.js';
 
 /**
  * Ground: Quản lý cảnh quan tổng thể Đà Nẵng:
  * - Dòng Sông Hàn thơ mộng chảy qua trung tâm từ Cầu Trần Thị Lý, Cầu Rồng đến Cầu Sông Hàn ra vịnh.
  * - Môi trường đô thị CityEnvironment: đường xá, bờ kè, nhà cửa, các tòa cao ốc biểu tượng (Tòa nhà Trái Bắp, Novotel, Hilton, APEC...).
+ * - Bãi biển Mỹ Khê & Hệ thống sóng biển dạt dào OceanWaves.
  * - Nền địa hình mở rộng cho toàn thành phố.
  */
 export class Ground {
@@ -17,6 +19,10 @@ export class Ground {
     // Môi trường đô thị, mạng lưới đường xá và các khối cao ốc hai bên sông Hàn
     this.cityEnvironment = new CityEnvironment();
     this.group.add(this.cityEnvironment.group);
+
+    // Hệ thống sóng biển động Biển Mỹ Khê
+    this.oceanWaves = new OceanWaves({ x: 20.65, y: 0.0, z: 7.57 });
+    this.group.add(this.oceanWaves.group);
   }
 
   _createHanRiver() {
@@ -65,12 +71,20 @@ export class Ground {
     if (this.cityEnvironment) {
       this.cityEnvironment.setNightMode(isNight);
     }
+    if (this.oceanWaves) {
+      this.oceanWaves.setNightMode(isNight);
+    }
   }
 
   update(time, delta = 0.016) {
     // Cập nhật hệ thống xe cộ lưu thông trên cầu và các đại lộ
     if (this.cityEnvironment) {
       this.cityEnvironment.update(time, delta);
+    }
+
+    // Cập nhật hệ thống sóng biển động Biển Mỹ Khê
+    if (this.oceanWaves) {
+      this.oceanWaves.update(time, delta);
     }
 
     // Sóng nước lăn tăn trên sông Hàn

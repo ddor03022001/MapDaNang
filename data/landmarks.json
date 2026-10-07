@@ -93,7 +93,7 @@
       "name": "Biển Mỹ Khê",
       "nameEn": "My Khe Beach",
       "category": "beach",
-      "description": "Bãi biển được tạp chí Forbes bình chọn là một trong những bãi biển hấp dẫn nhất hành tinh.",
+      "description": "Bãi biển được tạp chí Forbes bình chọn là một trong những bãi biển quyến rũ nhất hành tinh với bờ cát trắng mịn thoai thoải, rặng dừa nghiêng bóng mát và sóng biển ôn hòa quanh năm.",
       "gps": {
         "lat": 16.0544,
         "lng": 108.247
@@ -106,7 +106,7 @@
       },
       "model": {
         "path": "/models/my-khe-beach/my-khe-beach.glb",
-        "status": "pending"
+        "status": "ready"
       },
       "references": "assets/references/my-khe-beach"
     }

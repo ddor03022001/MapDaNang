@@ -179,6 +179,11 @@ export class SceneManager {
         // Toàn cảnh sông Hàn nối giữa 2 cầu và các dãy phố cao ốc đôi bờ
         pos: new THREE.Vector3(-7.5, 5.4, -6.0),
         target: new THREE.Vector3(0.0, 0.2, -6.0)
+      },
+      'my-khe': {
+        // Góc nhìn toàn cảnh Biển Mỹ Khê: cát trắng mịn, rặng dừa, tháp cứu hộ, thuyền thúng và sóng biển dạt dào
+        pos: new THREE.Vector3(23.2, 1.6, 12.8),
+        target: new THREE.Vector3(21.2, 0.18, 7.57)
       }
     };
 
