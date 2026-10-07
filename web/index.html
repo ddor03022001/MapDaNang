@@ -3,36 +3,371 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bản đồ 3D Đà Nẵng</title>
+    <title>Bản đồ 3D Đà Nẵng — Cầu Rồng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg-glass: rgba(13, 20, 32, 0.72);
+        --bg-glass-active: rgba(255, 186, 8, 0.22);
+        --border-glass: rgba(255, 255, 255, 0.12);
+        --accent-gold: #ffba08;
+        --accent-cyan: #00d2ff;
+        --accent-fire: #ff4d00;
+        --text-main: #f0f4f8;
+        --text-sub: #9ab0c4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       html, body {
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
-        background: #0b0f14;
+        background: #080d14;
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text-main);
+        user-select: none;
       }
+
       #app {
         width: 100vw;
         height: 100vh;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
       }
-      #info-panel {
+
+      /* Top Header */
+      .header-bar {
         position: fixed;
-        top: 12px;
-        left: 12px;
-        padding: 10px 14px;
-        background: rgba(10, 14, 20, 0.65);
-        color: #e8edf2;
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        font-size: 14px;
+        top: 16px;
+        left: 16px;
+        z-index: 20;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-glass);
+        border-radius: 14px;
+        padding: 12px 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .logo-icon {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #ffba08, #ff6b00);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 0 16px rgba(255, 186, 8, 0.45);
+      }
+
+      .header-titles h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .header-titles p {
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        color: var(--text-sub);
+      }
+
+      .badge-ready {
+        font-size: 10px;
+        padding: 2px 8px;
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #4ade80;
+        border-radius: 12px;
+        font-weight: 600;
+      }
+
+      /* Floating Controls Panel (Top Right) */
+      .control-panel {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 20;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 14px 18px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 280px;
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-sub);
+        margin-bottom: 6px;
+      }
+
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-glass);
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 7px 12px;
         border-radius: 8px;
-        pointer-events: none;
-        z-index: 10;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .btn.active {
+        background: var(--bg-glass-active);
+        border-color: var(--accent-gold);
+        color: var(--accent-gold);
+        box-shadow: 0 0 14px rgba(255, 186, 8, 0.25);
+      }
+
+      .btn-fire {
+        background: rgba(255, 77, 0, 0.15);
+        border-color: rgba(255, 77, 0, 0.35);
+        color: #ff7733;
+      }
+      .btn-fire:hover, .btn-fire.active {
+        background: rgba(255, 77, 0, 0.35);
+        border-color: var(--accent-fire);
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(255, 77, 0, 0.45);
+      }
+
+      .btn-water {
+        background: rgba(0, 210, 255, 0.15);
+        border-color: rgba(0, 210, 255, 0.35);
+        color: #38bdf8;
+      }
+      .btn-water:hover, .btn-water.active {
+        background: rgba(0, 210, 255, 0.35);
+        border-color: var(--accent-cyan);
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(0, 210, 255, 0.45);
+      }
+
+      /* Landmark Details Card (Bottom Left) */
+      .landmark-card {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        z-index: 20;
+        max-width: 380px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 16px 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .landmark-card h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent-gold);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .landmark-card .subtitle {
+        font-size: 12px;
+        color: var(--text-sub);
+        margin: 4px 0 10px 0;
+      }
+
+      .landmark-card p {
+        margin: 0 0 12px 0;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: #d1d9e2;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .stat-item {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 8px;
+        padding: 6px 10px;
+      }
+
+      .stat-label {
+        font-size: 10.5px;
+        color: var(--text-sub);
+      }
+
+      .stat-val {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-top: 2px;
+      }
+
+      /* Help footer */
+      .hint-bar {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 20;
+        background: rgba(13, 20, 32, 0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 11px;
+        color: var(--text-sub);
+        display: flex;
+        gap: 12px;
+      }
+
+      @media (max-width: 768px) {
+        .landmark-card {
+          max-width: calc(100vw - 32px);
+          font-size: 11px;
+        }
+        .control-panel {
+          min-width: unset;
+          width: calc(100vw - 32px);
+          top: unset;
+          bottom: 16px;
+          right: 16px;
+        }
+        .landmark-card {
+          display: none;
+        }
       }
     </style>
   </head>
   <body>
     <div id="app"></div>
-    <div id="info-panel">Bản đồ 3D Đà Nẵng — đang tải địa danh...</div>
+
+    <!-- Header -->
+    <div class="header-bar">
+      <div class="logo-icon">🐉</div>
+      <div class="header-titles">
+        <h1>Bản đồ 3D Đà Nẵng <span class="badge-ready">Model 1:1 Chuẩn</span></h1>
+        <p id="info-panel">Đang khởi tạo bản đồ số...</p>
+      </div>
+    </div>
+
+    <!-- Floating Controls Panel -->
+    <div class="control-panel">
+      <!-- Camera Angles -->
+      <div>
+        <div class="section-label">Góc Nhìn Khám Phá</div>
+        <div class="btn-group">
+          <button class="btn active" id="cam-overview">🌐 Toàn Cảnh</button>
+          <button class="btn" id="cam-head">🐉 Đầu Rồng</button>
+          <button class="btn" id="cam-tail">🪷 Đuôi Rồng</button>
+          <button class="btn" id="cam-deck">🛣️ Mặt Cầu</button>
+          <button class="btn" id="cam-river">🚢 Sông Hàn</button>
+        </div>
+      </div>
+
+      <!-- Lighting & Atmosphere -->
+      <div>
+        <div class="section-label">Bầu Trời & Ánh Sáng</div>
+        <div class="btn-group">
+          <button class="btn active" id="light-day">☀️ Ban Ngày</button>
+          <button class="btn" id="light-sunset">🌅 Hoàng Hôn</button>
+          <button class="btn" id="light-night">🌙 Ban Đêm (LED)</button>
+        </div>
+      </div>
+
+      <!-- Dragon Special Effects -->
+      <div>
+        <div class="section-label">Màn Trình Diễn Cầu Rồng</div>
+        <div class="btn-group">
+          <button class="btn btn-fire" id="effect-fire">🔥 Phun Lửa</button>
+          <button class="btn btn-water" id="effect-water">💧 Phun Nước</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Landmark Details Card -->
+    <div class="landmark-card">
+      <h2>Cầu Rồng Đà Nẵng <span>⭐</span></h2>
+      <div class="subtitle">Dragon Bridge • Biểu tượng sông Hàn</div>
+      <p>
+        Cây cầu vòm thép đơn độc đáo mô phỏng con rồng thời Lý bay ra biển Đông. Đầu rồng ngẩng cao tại bờ Đông (Sơn Trà), đuôi hoa sen nở tại bờ Tây (Hải Châu).
+      </p>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Chiều dài thật</div>
+          <div class="stat-val">666 m (6 làn xe)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Chiều rộng mặt cầu</div>
+          <div class="stat-val">37.5 m</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Chiều cao vòm rồng</div>
+          <div class="stat-val">48.0 m (5 nhịp)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Đầu rồng thời Lý</div>
+          <div class="stat-val">18.2 m • 194.1 tấn</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Hint Bar -->
+    <div class="hint-bar">
+      <span>🖱️ Chuột trái: Xoay 3D</span>
+      <span>🔍 Cuộn: Phóng to/nhỏ</span>
+      <span>✋ Chuột phải: Di chuyển</span>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

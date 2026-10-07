@@ -18,7 +18,7 @@
       },
       "model": {
         "path": "/models/cau-rong/cau-rong.glb",
-        "status": "pending"
+        "status": "ready"
       },
       "references": "assets/references/cau-rong"
     },

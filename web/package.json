@@ -6,6 +6,7 @@
   "description": "Bản đồ 3D tương tác thành phố Đà Nẵng dùng Three.js, hiển thị các địa danh nổi bật dựng bằng Blender.",
   "scripts": {
     "dev": "vite",
+    "start": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
