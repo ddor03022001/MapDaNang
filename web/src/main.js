@@ -20,7 +20,7 @@ async function bootstrap() {
   let cauRongModel = null;
 
   try {
-    landmarks = await landmarkLoader.loadAll('/data/landmarks.json');
+    landmarks = await landmarkLoader.loadAll();
   } catch (err) {
     console.error('Không tải được danh sách địa danh:', err);
   }

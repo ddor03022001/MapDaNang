@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/MapDaNang/' : '/',
   root: '.',
   publicDir: 'public',
   server: {
@@ -11,4 +12,4 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true
   }
-});
+}));
