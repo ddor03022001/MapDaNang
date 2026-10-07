@@ -88,7 +88,8 @@ export class SceneManager {
   _initPostProcessing() {
     const renderScene = new RenderPass(this.scene, this.camera);
     const size = new THREE.Vector2(this.container.clientWidth, this.container.clientHeight);
-    this.bloomPass = new UnrealBloomPass(size, 0.5, 0.35, 0.72);
+    // Ngưỡng bloom 0.85 giúp giữ trọn vẹn độ sắc nét của hình khối đầu rồng, chỉ tỏa sáng ở tâm lửa và mắt rồng
+    this.bloomPass = new UnrealBloomPass(size, 0.35, 0.28, 0.85);
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(renderScene);
@@ -110,8 +111,8 @@ export class SceneManager {
 
       this.fillLight.color.setHex(0x8bc3e8);
       this.fillLight.intensity = 0.8;
-      this.renderer.toneMappingExposure = 1.15;
-      if (this.bloomPass) this.bloomPass.strength = 0.45;
+      this.renderer.toneMappingExposure = 1.10;
+      if (this.bloomPass) this.bloomPass.strength = 0.25;
     } else if (mode === 'sunset') {
       this.scene.background = new THREE.Color(0xd66838);
       this.scene.fog = new THREE.Fog(0xd66838, 30, 450);
@@ -125,8 +126,8 @@ export class SceneManager {
 
       this.fillLight.color.setHex(0x553377);
       this.fillLight.intensity = 0.7;
-      this.renderer.toneMappingExposure = 1.25;
-      if (this.bloomPass) this.bloomPass.strength = 0.7;
+      this.renderer.toneMappingExposure = 1.18;
+      if (this.bloomPass) this.bloomPass.strength = 0.38;
     } else if (mode === 'night') {
       this.scene.background = new THREE.Color(0x070c18);
       this.scene.fog = new THREE.Fog(0x070c18, 25, 350);
@@ -140,9 +141,9 @@ export class SceneManager {
 
       this.fillLight.color.setHex(0x223355);
       this.fillLight.intensity = 0.3;
-      this.renderer.toneMappingExposure = 1.4;
-      // Trong ban đêm: bloom tăng mạnh để mắt rồng, ngọn lửa, đèn LED tỏa quầng sáng lung linh
-      if (this.bloomPass) this.bloomPass.strength = 1.35;
+      this.renderer.toneMappingExposure = 1.15;
+      // Ban đêm: bloom dịu nhẹ vừa đủ lung linh, không làm mờ hoặc chói lóa đầu rồng
+      if (this.bloomPass) this.bloomPass.strength = 0.48;
     }
   }
 
@@ -153,9 +154,9 @@ export class SceneManager {
         target: new THREE.Vector3(0, 0.25, 0)
       },
       head: {
-        // Căn chuẩn góc nhìn cận cảnh đầu rồng và họng phun lửa (X=2.58, Y=0.25)
-        pos: new THREE.Vector3(3.35, 0.42, 0.65),
-        target: new THREE.Vector3(2.58, 0.25, 0.0)
+        // Căn chuẩn góc nhìn cận cảnh đầu rồng sắc nét và luồng phun hiệu ứng
+        pos: new THREE.Vector3(3.30, 0.40, 0.62),
+        target: new THREE.Vector3(2.62, 0.285, 0.0)
       },
       tail: {
         pos: new THREE.Vector3(-3.25, 0.38, 0.55),
@@ -168,6 +169,16 @@ export class SceneManager {
       river: {
         pos: new THREE.Vector3(0.0, 0.08, 2.8),
         target: new THREE.Vector3(0.0, 0.32, 0.0)
+      },
+      'song-han': {
+        // Toàn cảnh Cầu Sông Hàn nối liền 2 bờ sông với tháp chữ A, dây văng và trụ xoay
+        pos: new THREE.Vector3(3.8, 2.2, -9.5),
+        target: new THREE.Vector3(0.0, 0.20, -12.25)
+      },
+      city: {
+        // Toàn cảnh sông Hàn nối giữa 2 cầu và các dãy phố cao ốc đôi bờ
+        pos: new THREE.Vector3(-7.5, 5.4, -6.0),
+        target: new THREE.Vector3(0.0, 0.2, -6.0)
       }
     };
 

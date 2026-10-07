@@ -52,7 +52,7 @@ SPANS = [
 ]
 
 PIER_X_LOCATIONS = [
-    -333.0, -285.0, -240.0, -160.0, -75.0, 75.0, 160.0, 238.0, 285.0, 333.0
+    -285.0, -240.0, -160.0, -75.0, 75.0, 160.0, 238.0, 285.0
 ]
 
 
@@ -201,6 +201,34 @@ def build_piers_and_abutments(collection, mats):
             bm.faces.new([v_bot[i], v_bot[i_next], v_top[i_next], v_top[i]])
         bm.faces.new(list(reversed(v_bot)))
         bm.faces.new(v_top)
+
+    # Mố cầu 2 đầu (Abutments): Khối bê tông phẳng gọn gàng nằm hoàn toàn dưới gầm cầu, không nhô ra ngoài
+    for sign_x in [-1.0, 1.0]:
+        x_outer = sign_x * (BRIDGE_LENGTH / 2.0)
+        x_inner = sign_x * (BRIDGE_LENGTH / 2.0 - 7.0)
+        x_min_ab = min(x_inner, x_outer)
+        x_max_ab = max(x_inner, x_outer)
+        ab_half_w = 14.0  # Nằm gọn hoàn toàn trong đáy dầm hộp (28m < 37.5m)
+        z_b = 0.0
+        z_t = DECK_BOTTOM_Z + 0.1
+        
+        ab_pts = [
+            (x_min_ab, -ab_half_w, z_b),
+            (x_max_ab, -ab_half_w, z_b),
+            (x_max_ab,  ab_half_w, z_b),
+            (x_min_ab,  ab_half_w, z_b),
+            (x_min_ab, -ab_half_w, z_t),
+            (x_max_ab, -ab_half_w, z_t),
+            (x_max_ab,  ab_half_w, z_t),
+            (x_min_ab,  ab_half_w, z_t),
+        ]
+        v = [bm.verts.new(p) for p in ab_pts]
+        bm.faces.new([v[0], v[1], v[5], v[4]])
+        bm.faces.new([v[1], v[2], v[6], v[5]])
+        bm.faces.new([v[2], v[3], v[7], v[6]])
+        bm.faces.new([v[3], v[0], v[4], v[7]])
+        bm.faces.new([v[4], v[5], v[6], v[7]])
+        bm.faces.new([v[3], v[2], v[1], v[0]])
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     mesh = bpy.data.meshes.new("cau-rong_piers_mesh")

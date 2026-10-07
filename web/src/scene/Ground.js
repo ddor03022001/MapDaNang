@@ -1,106 +1,78 @@
 import * as THREE from 'three';
+import { CityEnvironment } from './CityEnvironment.js';
 
 /**
- * Ground: Mô phỏng cảnh quan thực tế Đà Nẵng với Sông Hàn chảy qua trung tâm,
- * hai bên là bờ kè Bạch Đằng (Bờ Tây) và Trần Hưng Đạo (Bờ Đông).
+ * Ground: Quản lý cảnh quan tổng thể Đà Nẵng:
+ * - Dòng Sông Hàn thơ mộng chảy qua trung tâm từ Cầu Trần Thị Lý, Cầu Rồng đến Cầu Sông Hàn ra vịnh.
+ * - Môi trường đô thị CityEnvironment: đường xá, bờ kè, nhà cửa, các tòa cao ốc biểu tượng (Tòa nhà Trái Bắp, Novotel, Hilton, APEC...).
+ * - Nền địa hình mở rộng cho toàn thành phố.
  */
 export class Ground {
   constructor() {
     this.group = new THREE.Group();
 
     this._createHanRiver();
-    this._createRiverBanks();
     this._createOuterTerrain();
+
+    // Môi trường đô thị, mạng lưới đường xá và các khối cao ốc hai bên sông Hàn
+    this.cityEnvironment = new CityEnvironment();
+    this.group.add(this.cityEnvironment.group);
   }
 
   _createHanRiver() {
-    // Sông Hàn chảy theo trục Z (Bắc - Nam), rộng ~480m (4.8 units trong scene)
-    const riverWidth = 4.8;
-    const riverLength = 40.0; // 4km chiều dài đoạn sông
-    const geometry = new THREE.PlaneGeometry(riverWidth, riverLength, 64, 128);
+    // Sông Hàn chảy dọc trục Z (Bắc - Nam), rộng ~558m (5.58 units trong scene từ X=-2.79 đến +2.79)
+    // Chiều dài 50 units (5km) bao trọn toàn bộ đoạn sông từ phía Nam Cầu Rồng đến phía Bắc Cầu Sông Hàn
+    const riverWidth = 5.58;
+    const riverLength = 52.0;
+    const geometry = new THREE.PlaneGeometry(riverWidth, riverLength, 64, 160);
 
     // Lưu các vị trí ban đầu để tạo sóng lăn tăn
     this.waterBasePositions = geometry.attributes.position.array.slice();
 
-    this.waterMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x0e3a4f,
-      roughness: 0.12,
-      metalness: 0.25,
-      transmission: 0.35,
-      ior: 1.333,
+    this.waterMaterial = new THREE.MeshStandardMaterial({
+      color: 0x0c3345,
+      roughness: 0.42,
+      metalness: 0.08,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.95,
       depthWrite: true
     });
 
     this.waterMesh = new THREE.Mesh(geometry, this.waterMaterial);
     this.waterMesh.rotation.x = -Math.PI / 2;
-    this.waterMesh.position.set(0, 0.005, 0); // Ngay sát trên mặt nước Z=0
+    this.waterMesh.position.set(0, 0.005, -7.0); // Tâm sông dịch về Z=-7.0 để cân đối Cầu Rồng (Z=0) và Cầu Sông Hàn (Z=-12.25)
     this.waterMesh.receiveShadow = true;
     this.group.add(this.waterMesh);
   }
 
-  _createRiverBanks() {
-    // Bờ kè bê tông & vỉa hè ven sông Bạch Đằng (Tây) và Trần Hưng Đạo (Đông)
-    const bankLength = 40.0;
-    const bankWidth = 2.0;
-    const quayHeight = 0.07; // Cao 7m so với nước
-
-    // Bờ Tây (Hải Châu - Bạch Đằng)
-    const westBankGeo = new THREE.BoxGeometry(bankWidth, quayHeight, bankLength);
-    const bankMat = new THREE.MeshStandardMaterial({
-      color: 0xd2d7dc,
-      roughness: 0.85,
-      metalness: 0.05
-    });
-
-    const westBank = new THREE.Mesh(westBankGeo, bankMat);
-    westBank.position.set(-3.4, quayHeight / 2, 0);
-    westBank.receiveShadow = true;
-    this.group.add(westBank);
-
-    // Dải công viên cây xanh ven sông bờ Tây
-    const parkMat = new THREE.MeshStandardMaterial({
-      color: 0x2e663a,
-      roughness: 0.9,
-      metalness: 0.0
-    });
-    const westParkGeo = new THREE.BoxGeometry(bankWidth * 1.5, quayHeight + 0.005, bankLength);
-    const westPark = new THREE.Mesh(westParkGeo, parkMat);
-    westPark.position.set(-5.15, quayHeight / 2, 0);
-    westPark.receiveShadow = true;
-    this.group.add(westPark);
-
-    // Bờ Đông (Sơn Trà - Trần Hưng Đạo)
-    const eastBank = new THREE.Mesh(westBankGeo, bankMat);
-    eastBank.position.set(3.4, quayHeight / 2, 0);
-    eastBank.receiveShadow = true;
-    this.group.add(eastBank);
-
-    // Dải công viên bờ Đông
-    const eastPark = new THREE.Mesh(westParkGeo, parkMat);
-    eastPark.position.set(5.15, quayHeight / 2, 0);
-    eastPark.receiveShadow = true;
-    this.group.add(eastPark);
-  }
-
   _createOuterTerrain() {
-    // Mặt nền đô thị rộng lớn bao quát toàn thành phố (cho các địa danh xa như Bà Nà, Ngũ Hành Sơn, Mỹ Khê)
+    // Mặt nền đô thị rộng lớn bao quát toàn thành phố
     const cityGeo = new THREE.PlaneGeometry(1200, 1200);
     const cityMat = new THREE.MeshStandardMaterial({
-      color: 0x3d4b41,
+      color: 0x2d3732,
       roughness: 0.95,
       metalness: 0.0
     });
 
     const cityMesh = new THREE.Mesh(cityGeo, cityMat);
     cityMesh.rotation.x = -Math.PI / 2;
-    cityMesh.position.set(0, -0.01, 0);
+    cityMesh.position.set(0, -0.015, 0);
     cityMesh.receiveShadow = true;
     this.group.add(cityMesh);
   }
 
-  update(time) {
+  setNightMode(isNight) {
+    if (this.cityEnvironment) {
+      this.cityEnvironment.setNightMode(isNight);
+    }
+  }
+
+  update(time, delta = 0.016) {
+    // Cập nhật hệ thống xe cộ lưu thông trên cầu và các đại lộ
+    if (this.cityEnvironment) {
+      this.cityEnvironment.update(time, delta);
+    }
+
     // Sóng nước lăn tăn trên sông Hàn
     if (this.waterMesh) {
       const pos = this.waterMesh.geometry.attributes.position;
@@ -109,8 +81,8 @@ export class Ground {
         const u = this.waterBasePositions[i * 3];
         const v = this.waterBasePositions[i * 3 + 1];
         // Sóng lăn tăn nhẹ nhàng
-        const wave = Math.sin(u * 5.0 + time * 1.8) * 0.008 +
-                     Math.cos(v * 4.0 + time * 1.4) * 0.006;
+        const wave = Math.sin(u * 5.0 + time * 1.8) * 0.007 +
+                     Math.cos(v * 4.0 + time * 1.4) * 0.005;
         pos.setZ(i, wave);
       }
       pos.needsUpdate = true;

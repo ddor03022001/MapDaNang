@@ -23,6 +23,28 @@
       "references": "assets/references/cau-rong"
     },
     {
+      "id": "cau-song-han",
+      "name": "Cầu Sông Hàn",
+      "nameEn": "Han River Swing Bridge",
+      "category": "bridge",
+      "description": "Cây cầu quay đầu tiên tại Việt Nam bắc qua sông Hàn, kết nối đường Lê Duẩn và Phạm Văn Đồng, biểu tượng tự hào với nhịp giữa có khả năng xoay 90 độ cho tàu bè qua lại.",
+      "gps": {
+        "lat": 16.0722,
+        "lng": 108.2277
+      },
+      "elevationMeters": 0,
+      "scenePosition": {
+        "x": 0,
+        "y": 0,
+        "z": -12.25
+      },
+      "model": {
+        "path": "/models/cau-song-han/cau-song-han.glb",
+        "status": "ready"
+      },
+      "references": "assets/references/cau-song-han"
+    },
+    {
       "id": "ba-na-hills",
       "name": "Bà Nà Hills",
       "nameEn": "Ba Na Hills",
