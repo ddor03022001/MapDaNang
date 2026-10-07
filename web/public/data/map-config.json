@@ -1,0 +1,32 @@
+{
+  "description": "Config trung tâm định nghĩa cách quy đổi toạ độ GPS thật sang toạ độ (x, y, z) trong scene Three.js. MỌI địa danh phải dùng cùng config này để không bị lệch vị trí tương đối khi ghép vào map tổng.",
+
+  "origin": {
+    "comment": "Điểm gốc (0, 0) của scene, tương ứng với 1 toạ độ GPS thật cố định. Chọn chân Cầu Rồng (phía Đông, đầu đường Nguyễn Văn Linh) làm gốc vì đây là landmark trung tâm, dễ đối chiếu thực địa.",
+    "lat": 16.0612,
+    "lng": 108.2277
+  },
+
+  "scale": {
+    "comment": "Tỉ lệ quy đổi: 1 đơn vị scene (Three.js unit) = bao nhiêu mét thật. Dùng 1:100 (metersPerUnit = 100) để thu nhỏ ĐỀU cả khoảng cách giữa các địa danh VÀ kích thước model, giúp người dùng di chuyển giữa các địa danh gần nhau hơn (toàn map giống 1 mô hình thu nhỏ/diorama, không mô phỏng đúng tỉ lệ người thật 1:1). Áp dụng tỉ lệ này ở 2 nơi: (1) scenePosition = toạ độ mét / metersPerUnit (xem scripts/compute-scene-positions.mjs), (2) kích thước model = scale khi load .glb vào scene (xem web/src/landmarks/Landmark.js, modelScale = 1/metersPerUnit). Model vẫn được DỰNG trong Blender theo đúng mét thật 1:1 (Unit Scale = 1.0), việc thu nhỏ chỉ xảy ra lúc đặt vào scene tổng, không sửa file .blend.",
+    "metersPerUnit": 100
+  },
+
+  "projection": {
+    "comment": "Phép chiếu Equirectangular cục bộ (flat-earth tangent plane), đủ chính xác cho phạm vi 1 thành phố (sai số <0.1% trong bán kính ~50km quanh origin). Trục scene: +X = hướng Đông, +Z = hướng Nam, +Y = độ cao (up). Công thức tham khảo web/src/utils/geo.js (hàm gpsToScene).",
+    "type": "equirectangular-local-tangent-plane",
+    "earthRadiusMeters": 6378137,
+    "axisMapping": {
+      "x": "east (longitude dương -> +X)",
+      "y": "elevation (độ cao, mét, lấy từ dữ liệu địa hình thật hoặc đặt tay)",
+      "z": "south (latitude dương hướng Bắc -> dùng -deltaLat nên +Z = hướng Nam, khớp quy ước Three.js camera nhìn về -Z)"
+    }
+  },
+
+  "notes": [
+    "Không sửa origin sau khi đã có landmark dùng scenePosition tính từ config này, vì sẽ làm lệch toàn bộ map đã dựng.",
+    "Khi thêm landmark mới: chỉ cần điền toạ độ GPS thật vào data/landmarks.json, rồi chạy `node scripts/compute-scene-positions.mjs` để tool tự tính lại scenePosition, không tính tay.",
+    "elevation (y) hiện chưa có nguồn dữ liệu địa hình thật, tạm đặt 0 (đơn vị MÉT THẬT, trước khi chia scale) cho mọi landmark trừ khi biết cao độ thực tế (ví dụ Bà Nà Hills ở độ cao ~1487m so với mực nước biển, cần cân nhắc khi dựng địa hình núi).",
+    "Nếu đổi metersPerUnit sau khi đã có landmark 'ready', phải chạy lại compute-scene-positions.mjs VÀ xác nhận web/src/landmarks/Landmark.js đang dùng cùng giá trị metersPerUnit để scale model, tránh model đúng kích thước nhưng vị trí lệch (hoặc ngược lại)."
+  ]
+}

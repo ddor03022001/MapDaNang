@@ -1,0 +1,18 @@
+{
+  "name": "da-nang-map-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bản đồ 3D tương tác thành phố Đà Nẵng dùng Three.js, hiển thị các địa danh nổi bật dựng bằng Blender.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.9"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "landmarks": [
+    {
+      "id": "cau-rong",
+      "name": "Cầu Rồng",
+      "nameEn": "Dragon Bridge",
+      "category": "bridge",
+      "description": "Cây cầu hình rồng bắc qua sông Hàn, biểu tượng của thành phố Đà Nẵng, nổi tiếng với khả năng phun lửa và phun nước vào cuối tuần.",
+      "gps": {
+        "lat": 16.0612,
+        "lng": 108.2277
+      },
+      "elevationMeters": 0,
+      "scenePosition": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "model": {
+        "path": "/models/cau-rong/cau-rong.glb",
+        "status": "pending"
+      },
+      "references": "assets/references/cau-rong"
+    },
+    {
+      "id": "ba-na-hills",
+      "name": "Bà Nà Hills",
+      "nameEn": "Ba Na Hills",
+      "category": "resort",
+      "description": "Khu du lịch nghỉ dưỡng trên núi với Cầu Vàng và làng Pháp cổ, cách trung tâm thành phố khoảng 25km.",
+      "gps": {
+        "lat": 15.9977,
+        "lng": 107.9886
+      },
+      "elevationMeters": 1487,
+      "scenePosition": {
+        "x": -255.78,
+        "y": 14.87,
+        "z": 70.69
+      },
+      "model": {
+        "path": "/models/ba-na-hills/ba-na-hills.glb",
+        "status": "pending"
+      },
+      "references": "assets/references/ba-na-hills"
+    },
+    {
+      "id": "nguhanh-son",
+      "name": "Ngũ Hành Sơn",
+      "nameEn": "Marble Mountains",
+      "category": "natural-landmark",
+      "description": "Quần thể 5 ngọn núi đá vôi mang tên 5 nguyên tố Kim, Thủy, Mộc, Hỏa, Thổ, có nhiều hang động và chùa chiền.",
+      "gps": {
+        "lat": 16.0028,
+        "lng": 108.263
+      },
+      "elevationMeters": 0,
+      "scenePosition": {
+        "x": 37.76,
+        "y": 0,
+        "z": 65.01
+      },
+      "model": {
+        "path": "/models/nguhanh-son/nguhanh-son.glb",
+        "status": "pending"
+      },
+      "references": "assets/references/nguhanh-son"
+    },
+    {
+      "id": "my-khe-beach",
+      "name": "Biển Mỹ Khê",
+      "nameEn": "My Khe Beach",
+      "category": "beach",
+      "description": "Bãi biển được tạp chí Forbes bình chọn là một trong những bãi biển hấp dẫn nhất hành tinh.",
+      "gps": {
+        "lat": 16.0544,
+        "lng": 108.247
+      },
+      "elevationMeters": 0,
+      "scenePosition": {
+        "x": 20.65,
+        "y": 0,
+        "z": 7.57
+      },
+      "model": {
+        "path": "/models/my-khe-beach/my-khe-beach.glb",
+        "status": "pending"
+      },
+      "references": "assets/references/my-khe-beach"
+    }
+  ]
+}
