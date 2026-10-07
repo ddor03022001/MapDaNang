@@ -181,9 +181,9 @@ export class SceneManager {
         target: new THREE.Vector3(0.0, 0.2, -6.0)
       },
       'my-khe': {
-        // Góc nhìn toàn cảnh Biển Mỹ Khê: cát trắng mịn, rặng dừa, tháp cứu hộ, thuyền thúng và sóng biển dạt dào
-        pos: new THREE.Vector3(23.2, 1.6, 12.8),
-        target: new THREE.Vector3(21.2, 0.18, 7.57)
+        // Góc nhìn toàn cảnh Biển Mỹ Khê: cát trắng mịn, rặng dừa, tháp cứu hộ, thuyền thúng, sóng biển và trục đường Võ Văn Kiệt - Võ Nguyên Giáp
+        pos: new THREE.Vector3(23.8, 2.0, 4.2),
+        target: new THREE.Vector3(20.65, 0.18, 0.45)
       }
     };
 

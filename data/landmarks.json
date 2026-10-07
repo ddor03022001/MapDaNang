@@ -95,14 +95,14 @@
       "category": "beach",
       "description": "Bãi biển được tạp chí Forbes bình chọn là một trong những bãi biển quyến rũ nhất hành tinh với bờ cát trắng mịn thoai thoải, rặng dừa nghiêng bóng mát và sóng biển ôn hòa quanh năm.",
       "gps": {
-        "lat": 16.0544,
+        "lat": 16.0608,
         "lng": 108.247
       },
       "elevationMeters": 0,
       "scenePosition": {
         "x": 20.65,
         "y": 0,
-        "z": 7.57
+        "z": 0.45
       },
       "model": {
         "path": "/models/my-khe-beach/my-khe-beach.glb",

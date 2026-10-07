@@ -11,7 +11,7 @@ import * as THREE from 'three';
  * 5. Đàn chim hải âu chao lượn trên bầu trời biển Mỹ Khê.
  */
 export class OceanWaves {
-  constructor(origin = { x: 20.65, y: 0.0, z: 7.57 }) {
+  constructor(origin = { x: 20.65, y: 0.0, z: 0.45 }) {
     this.group = new THREE.Group();
     this.origin = origin;
     this.seagulls = [];
@@ -22,12 +22,12 @@ export class OceanWaves {
   }
 
   _createDynamicOceanSurface() {
-    // Mặt nước biển trải dài từ mép bờ cát (X ≈ 20.65 + 0.70) ra xa khơi (X ≈ 20.65 + 3.80)
-    // Chiều dài dọc bờ biển: 9.0 units (900m)
-    this.oceanWidth = 3.6;   // 360m ra khơi
-    this.oceanLength = 9.2;  // 920m dọc bờ biển
+    // Mặt nước biển trải dài dọc toàn bộ bờ biển phía Đông từ Bán đảo Sơn Trà / Phạm Văn Đồng đến An Thượng
+    // Chiều dài dọc bờ biển: 24.0 units (2.4 km), chiều rộng ra khơi: 4.8 units (480m)
+    this.oceanWidth = 4.8;
+    this.oceanLength = 24.0;
     this.oceanSegmentsX = 48;
-    this.oceanSegmentsZ = 72;
+    this.oceanSegmentsZ = 120;
 
     const geo = new THREE.PlaneGeometry(
       this.oceanWidth,
@@ -57,7 +57,7 @@ export class OceanWaves {
     this.oceanMesh = new THREE.Mesh(geo, this.oceanMat);
     // Đặt tâm mặt biển ở phía Đông bãi cát Mỹ Khê
     this.oceanMesh.position.set(
-      this.origin.x + 2.50,
+      this.origin.x + 3.10,
       this.origin.y + 0.008,
       this.origin.z
     );
@@ -84,8 +84,8 @@ export class OceanWaves {
     });
 
     for (let i = 0; i < this.foamCount; i++) {
-      const segs = 64;
-      const ribbonGeo = new THREE.PlaneGeometry(0.18, 8.8, 1, segs);
+      const segs = 120;
+      const ribbonGeo = new THREE.PlaneGeometry(0.22, 23.6, 1, segs);
       ribbonGeo.rotateX(-Math.PI / 2);
 
       const ribbonMesh = new THREE.Mesh(ribbonGeo, foamMat.clone());
@@ -100,7 +100,7 @@ export class OceanWaves {
     }
 
     // Dải bọt sóng bờ cát (Shoreline wash) dạt lên bãi cát ẩm
-    const washGeo = new THREE.PlaneGeometry(0.24, 8.8, 1, 64);
+    const washGeo = new THREE.PlaneGeometry(0.26, 23.6, 1, 120);
     washGeo.rotateX(-Math.PI / 2);
     this.washMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
