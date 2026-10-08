@@ -5,6 +5,7 @@ import { DragonEffects } from './landmarks/cau-rong/DragonEffects.js';
 import { AudioSynthesizer } from './core/AudioSynthesizer.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { LANDMARK_REGISTRY, getLandmarkConfig } from './landmarks/registry.js';
+import { CharacterController } from './character/CharacterController.js';
 
 /**
  * Main application bootstrap routine.
@@ -62,8 +63,26 @@ async function bootstrap() {
     }
   });
 
-  // Mount reactive sidebar navigation and feature controls
+  // Initialize third-person GTA character exploration controller
+  const characterController = new CharacterController({
+    scene: sceneManager.scene,
+    camera: sceneManager.camera,
+    domElement: sceneManager.renderer.domElement
+  });
+
+  // Preload character model in background
+  characterController.load().catch((err) => console.warn('[CharacterController] Preload deferred:', err));
+
+  // Set collision surfaces once landmarks are mounted
+  characterController.groundClamping.setCollisionTargets([
+    ground.group,
+    cauRongModel,
+    nguHanhSonModel
+  ]);
+
+  // Mount reactive sidebar navigation, explore mode, and feature controls
   setupSidebarUI(sceneManager, dragonEffects, ground, oceanAudio, () => cauRongModel, () => nguHanhSonModel);
+  setupExploreModeUI(characterController, sceneManager);
 
   // Render initial frame behind preloader curtain
   sceneManager.render();
@@ -80,8 +99,12 @@ async function bootstrap() {
     // Update environmental animations (river currents, traffic lanes, ocean waves)
     ground.update(time, delta);
 
-    // Update smooth camera transitions and particle systems
-    sceneManager.update(delta);
+    // Update character controller when exploring, or standard camera when viewing map
+    if (characterController.enabled) {
+      characterController.update(delta);
+    } else {
+      sceneManager.update(delta);
+    }
     dragonEffects.update(delta, time, cauRongModel);
 
     sceneManager.render();
@@ -395,4 +418,82 @@ function setupSidebarUI(sceneManager, dragonEffects, ground, oceanAudio, getBrid
   sceneManager.setCameraPreset('overview:city');
 }
 
+/**
+ * Sets up user interface bindings for the GTA character exploration mode,
+ * floating launch button, teleport pills, and camera view toggle.
+ * 
+ * @param {CharacterController} characterController 
+ * @param {SceneManager} sceneManager 
+ */
+function setupExploreModeUI(characterController, sceneManager) {
+  const exploreBtn = document.getElementById('btn-explore-mode');
+  const hud = document.getElementById('character-hud');
+  const exitBtn = document.getElementById('btn-exit-explore');
+  const locationText = document.getElementById('hud-location-text');
+  const cameraModeText = document.getElementById('hud-camera-mode');
+  const spawnPills = document.querySelectorAll('.spawn-pill');
+  const sidebar = document.getElementById('sidebar');
+
+  function enterExploreMode(spawnKey = null) {
+    sceneManager.controls.enabled = false;
+    characterController.enable(spawnKey);
+    if (exploreBtn) exploreBtn.classList.add('active');
+    if (hud) hud.classList.remove('hidden');
+    if (sidebar) sidebar.classList.add('collapsed');
+  }
+
+  function exitExploreMode() {
+    characterController.disable();
+    sceneManager.controls.enabled = true;
+    if (exploreBtn) exploreBtn.classList.remove('active');
+    if (hud) hud.classList.add('hidden');
+  }
+
+  if (exploreBtn) {
+    exploreBtn.addEventListener('click', () => {
+      if (characterController.enabled) {
+        exitExploreMode();
+      } else {
+        enterExploreMode();
+      }
+    });
+  }
+
+  if (exitBtn) {
+    exitBtn.addEventListener('click', () => {
+      exitExploreMode();
+    });
+  }
+
+  spawnPills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const spawnKey = pill.getAttribute('data-spawn');
+      characterController.teleportTo(spawnKey);
+      spawnPills.forEach((p) => p.classList.toggle('active', p === pill));
+    });
+  });
+
+  characterController.onStateChange = (state) => {
+    if (!state.enabled) {
+      if (exploreBtn) exploreBtn.classList.remove('active');
+      if (hud) hud.classList.add('hidden');
+      return;
+    }
+
+    if (locationText && state.location) {
+      locationText.textContent = `📍 ${state.location}`;
+    }
+
+    if (cameraModeText && state.mode) {
+      cameraModeText.textContent = `${state.mode.toUpperCase()} 3D`;
+    }
+
+    // Synchronize active spawn pill
+    spawnPills.forEach((p) => {
+      p.classList.toggle('active', p.getAttribute('data-spawn') === characterController.currentSpawnKey);
+    });
+  };
+}
+
 bootstrap();
+
