@@ -12,12 +12,13 @@ export class LandmarkLoader {
   }
 
   /**
-   * Fetches metadata from landmarks.json and map-config.json, then loads all ready assets.
+   * Fetches metadata from landmarks.json and map-config.json, then loads all ready assets in parallel.
    * @param {string} [jsonUrl] - Custom endpoint for landmarks.json
    * @param {string} [mapConfigUrl] - Custom endpoint for map-config.json
+   * @param {(loadedCount: number, totalCount: number) => void} [onProgress] - Optional progress notification callback
    * @returns {Promise<Landmark[]>} Array of successfully loaded Landmark instances
    */
-  async loadAll(jsonUrl, mapConfigUrl) {
+  async loadAll(jsonUrl, mapConfigUrl, onProgress) {
     const baseUrl = import.meta.env.BASE_URL || '/';
     const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
@@ -38,23 +39,31 @@ export class LandmarkLoader {
 
     const { landmarks } = await landmarksRes.json();
     const mapConfig = await mapConfigRes.json();
-    const results = [];
 
-    for (const data of landmarks) {
-      if (data.model?.status !== 'ready') {
-        console.warn(`[LandmarkLoader] Skipping "${data.name}" (${data.id}): model not ready (status: ${data.model?.status}).`);
-        continue;
-      }
+    const readyLandmarks = landmarks.filter((data) => data.model?.status === 'ready');
+    const totalCount = readyLandmarks.length;
+    let loadedCount = 0;
 
+    const loadTasks = readyLandmarks.map(async (data) => {
       try {
         const landmark = await this._loadOne(data, mapConfig);
-        results.push(landmark);
+        loadedCount++;
+        if (onProgress) {
+          onProgress(loadedCount, totalCount);
+        }
+        return landmark;
       } catch (err) {
         console.error(`[LandmarkLoader] Failed to load 3D model for "${data.name}" (${data.id}):`, err);
+        loadedCount++;
+        if (onProgress) {
+          onProgress(loadedCount, totalCount);
+        }
+        return null;
       }
-    }
+    });
 
-    return results;
+    const settledResults = await Promise.all(loadTasks);
+    return settledResults.filter(Boolean);
   }
 
   /**

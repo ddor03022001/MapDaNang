@@ -482,9 +482,427 @@
           left: 16px;
         }
       }
+
+      /* =========================================================
+         High-Tech Spatial Preloader / Cinematic Loading HUD
+         ========================================================= */
+      .loading-screen {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background: #060911;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), 
+                    visibility 0.85s ease, 
+                    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.85s ease;
+        transform: scale(1);
+        pointer-events: all;
+        overflow: hidden;
+      }
+
+      .loading-screen.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(1.05);
+        filter: blur(8px);
+        pointer-events: none;
+      }
+
+      /* Animated 3D Spatial Grid Background */
+      .loading-grid {
+        position: absolute;
+        inset: -50%;
+        background-image: 
+          linear-gradient(rgba(0, 210, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 210, 255, 0.05) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: radial-gradient(circle at 50% 50%, black 15%, transparent 70%);
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, black 15%, transparent 70%);
+        pointer-events: none;
+        animation: gridPulse 6s ease-in-out infinite alternate;
+      }
+
+      @keyframes gridPulse {
+        0% { transform: scale(1) translateY(0); opacity: 0.6; }
+        100% { transform: scale(1.04) translateY(-10px); opacity: 0.9; }
+      }
+
+      /* Rotating Holographic Conic Radar Beam */
+      .loading-radar {
+        position: absolute;
+        width: 650px;
+        height: 650px;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg, 
+          transparent 0deg, 
+          transparent 270deg, 
+          rgba(0, 210, 255, 0.05) 320deg, 
+          rgba(255, 186, 8, 0.12) 360deg
+        );
+        animation: radarSpin 10s linear infinite;
+        pointer-events: none;
+        filter: blur(12px);
+      }
+
+      @keyframes radarSpin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      /* Ambient Atmospheric Flares */
+      .loading-ambient-glow {
+        position: absolute;
+        width: 480px;
+        height: 480px;
+        background: radial-gradient(circle, rgba(255, 186, 8, 0.15) 0%, rgba(0, 210, 255, 0.08) 45%, transparent 70%);
+        filter: blur(40px);
+        pointer-events: none;
+        animation: ambientBreathe 4s ease-in-out infinite alternate;
+      }
+
+      @keyframes ambientBreathe {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        100% { transform: scale(1.15); opacity: 1; }
+      }
+
+      /* Central Futuristic HUD Card */
+      .loading-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 42px 46px;
+        background: rgba(10, 16, 28, 0.78);
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 28px;
+        box-shadow: 
+          0 24px 64px rgba(0, 0, 0, 0.75), 
+          0 0 40px rgba(255, 186, 8, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        max-width: 400px;
+        width: 90%;
+        z-index: 10;
+      }
+
+      /* High-Tech HUD Corner Notches */
+      .hud-corner {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        pointer-events: none;
+      }
+      .hud-corner.tl { top: 12px; left: 12px; border-top: 2px solid var(--accent-gold); border-left: 2px solid var(--accent-gold); }
+      .hud-corner.tr { top: 12px; right: 12px; border-top: 2px solid var(--accent-gold); border-right: 2px solid var(--accent-gold); }
+      .hud-corner.bl { bottom: 12px; left: 12px; border-bottom: 2px solid var(--accent-gold); border-left: 2px solid var(--accent-gold); }
+      .hud-corner.br { bottom: 12px; right: 12px; border-bottom: 2px solid var(--accent-gold); border-right: 2px solid var(--accent-gold); }
+
+      /* Hero Holographic Compass & Dragon Crest */
+      .badge-wrapper {
+        position: relative;
+        width: 104px;
+        height: 104px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .badge-outer-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px dashed rgba(255, 186, 8, 0.4);
+        animation: ringRotate 20s linear infinite;
+      }
+
+      @keyframes ringRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .badge-inner-ring {
+        position: absolute;
+        inset: 6px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 210, 255, 0.25);
+        border-top-color: var(--accent-gold);
+        border-bottom-color: var(--accent-cyan);
+        animation: ringCounterRotate 12s linear infinite;
+      }
+
+      @keyframes ringCounterRotate {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+
+      .loading-badge {
+        position: relative;
+        width: 78px;
+        height: 78px;
+        background: radial-gradient(circle, rgba(255, 186, 8, 0.22) 0%, rgba(15, 23, 42, 0.85) 75%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 186, 8, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 
+          0 0 25px rgba(255, 186, 8, 0.4), 
+          inset 0 0 16px rgba(255, 186, 8, 0.2);
+        animation: badgePulse 2.4s ease-in-out infinite;
+      }
+
+      @keyframes badgePulse {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 0 24px rgba(255, 186, 8, 0.4), inset 0 0 16px rgba(255, 186, 8, 0.2);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 38px rgba(255, 186, 8, 0.7), 0 0 16px rgba(0, 210, 255, 0.4);
+        }
+      }
+
+      .crest-svg {
+        width: 58px;
+        height: 58px;
+        filter: drop-shadow(0 2px 8px rgba(255, 186, 8, 0.6));
+      }
+
+      /* Category Sub-Tag */
+      .loading-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(0, 210, 255, 0.08);
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        border-radius: 99px;
+        padding: 3px 10px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 1.2px;
+        color: #38bdf8;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .tag-beacon {
+        width: 6px;
+        height: 6px;
+        background: #00d2ff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00d2ff;
+        animation: beaconBlink 1.4s ease-in-out infinite alternate;
+      }
+
+      @keyframes beaconBlink {
+        0% { opacity: 0.3; transform: scale(0.8); }
+        100% { opacity: 1; transform: scale(1.25); }
+      }
+
+      /* Headline Typography */
+      .loading-title {
+        margin: 0;
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: 3.5px;
+        background: linear-gradient(180deg, #ffffff 0%, #ffde59 55%, #ff9e00 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-transform: uppercase;
+        filter: drop-shadow(0 2px 10px rgba(255, 186, 8, 0.3));
+      }
+
+      /* Concise User-Specified Status Text */
+      .loading-status {
+        margin: 8px 0 22px;
+        font-size: 13.5px;
+        color: var(--accent-gold);
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .loading-dots::after {
+        content: '...';
+        animation: loadingDots 1.6s steps(4, jump-none) infinite;
+        display: inline-block;
+        width: 14px;
+        text-align: left;
+      }
+
+      @keyframes loadingDots {
+        0% { content: ''; }
+        25% { content: '.'; }
+        50% { content: '..'; }
+        75% { content: '...'; }
+        100% { content: '...'; }
+      }
+
+      /* Progress Bar & Telemetry HUD */
+      .loading-bar-wrapper {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .loading-progress-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: var(--text-sub);
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      .loading-percent {
+        font-weight: 800;
+        color: #ffba08;
+        font-size: 14px;
+        font-variant-numeric: tabular-nums;
+        font-family: 'Outfit', monospace;
+        text-shadow: 0 0 10px rgba(255, 186, 8, 0.6);
+      }
+
+      .loading-bar-track {
+        width: 100%;
+        height: 7px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 99px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      }
+
+      .loading-bar-fill {
+        position: relative;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #ff4d00 0%, #ffba08 45%, #00d2ff 100%);
+        border-radius: 99px;
+        box-shadow: 0 0 16px rgba(255, 186, 8, 0.8), 0 0 25px rgba(0, 210, 255, 0.4);
+        transition: width 0.15s ease-out;
+      }
+
+      .loading-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+        animation: barShimmer 1.8s infinite;
+      }
+
+      @keyframes barShimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      .loading-telemetry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+        font-size: 9.5px;
+        color: rgba(255, 255, 255, 0.35);
+        letter-spacing: 0.8px;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
+    <!-- High-Performance Preloader / Cinematic Spatial HUD -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-grid"></div>
+      <div class="loading-radar"></div>
+      <div class="loading-ambient-glow"></div>
+
+      <div class="loading-container">
+        <!-- High-Tech Corner Brackets -->
+        <span class="hud-corner tl"></span>
+        <span class="hud-corner tr"></span>
+        <span class="hud-corner bl"></span>
+        <span class="hud-corner br"></span>
+
+        <!-- Hero Holographic Dragon Crest -->
+        <div class="badge-wrapper">
+          <div class="badge-outer-ring"></div>
+          <div class="badge-inner-ring"></div>
+          <div class="loading-badge">
+            <svg class="crest-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="crestGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="30%" stop-color="#ffde59"/>
+                  <stop offset="70%" stop-color="#ff9e00"/>
+                  <stop offset="100%" stop-color="#ea580c"/>
+                </linearGradient>
+                <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#00d2ff" stop-opacity="0.2"/>
+                  <stop offset="50%" stop-color="#00d2ff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#00d2ff" stop-opacity="0.2"/>
+                </linearGradient>
+              </defs>
+              <!-- Han River Wave Arc -->
+              <path d="M15 92 Q37 84 60 92 T105 92" stroke="url(#waterGrad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path d="M25 99 Q45 93 60 99 T95 99" stroke="url(#waterGrad)" stroke-width="2" stroke-opacity="0.6" stroke-linecap="round" fill="none"/>
+              <!-- Iconic Danang Dragon Arches -->
+              <path d="M20 85 Q32 40 45 68 Q58 35 72 65 Q85 30 98 48" stroke="url(#crestGold)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <!-- Dragon Head with Horns & open fiery mouth -->
+              <path d="M96 46 C98 38 106 32 110 33 C108 38 104 41 107 45 C111 44 113 47 111 50 C107 51 103 48 99 53 Z" fill="url(#crestGold)"/>
+              <path d="M103 34 L108 24 L105 34 Z" fill="#ffffff"/>
+              <!-- Dragon Pearl (Ngọc Rồng) -->
+              <circle cx="114" cy="52" r="3.5" fill="#ff4d00" />
+              <circle cx="114" cy="52" r="1.5" fill="#fff" />
+              <!-- Dragon Tail Spire -->
+              <path d="M22 84 L14 78 L18 86 Z" fill="url(#crestGold)"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="loading-tag">
+          <span class="tag-beacon"></span>3D SPATIAL METAVERSE
+        </div>
+
+        <h1 class="loading-title">ĐÀ NẴNG 3D</h1>
+
+        <div class="loading-status">Đang nạp bản đồ<span class="loading-dots"></span></div>
+
+        <div class="loading-bar-wrapper">
+          <div class="loading-progress-info">
+            <span>DỮ LIỆU ĐÔ THỊ</span>
+            <span class="loading-percent" id="loading-percent">0%</span>
+          </div>
+
+          <div class="loading-bar-track">
+            <div class="loading-bar-fill" id="loading-bar-fill"></div>
+          </div>
+
+          <div class="loading-telemetry">
+            <span>16.0544° N, 108.2022° E</span>
+            <span>EPSG:4326 // V-DATUM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Three.js Canvas Container -->
     <div id="app"></div>
 

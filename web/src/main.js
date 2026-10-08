@@ -3,6 +3,7 @@ import { Ground } from './scene/Ground.js';
 import { LandmarkLoader } from './landmarks/LandmarkLoader.js';
 import { DragonEffects } from './landmarks/cau-rong/DragonEffects.js';
 import { AudioSynthesizer } from './core/AudioSynthesizer.js';
+import { LoadingScreen } from './ui/LoadingScreen.js';
 import { LANDMARK_REGISTRY, getLandmarkConfig } from './landmarks/registry.js';
 
 /**
@@ -11,11 +12,15 @@ import { LANDMARK_REGISTRY, getLandmarkConfig } from './landmarks/registry.js';
  * and reactive UI controls.
  */
 async function bootstrap() {
+  const loadingScreen = new LoadingScreen();
+  loadingScreen.setProgress(12);
+
   const sceneManager = new SceneManager('#app');
 
   // Initialize geographical environment (Han River, city grid, My Khe beach)
   const ground = new Ground();
   ground.addTo(sceneManager.scene);
+  loadingScreen.setProgress(25);
 
   // Initialize landmark-specific visual effects
   const dragonEffects = new DragonEffects(sceneManager.scene);
@@ -31,7 +36,10 @@ async function bootstrap() {
   const statusText = document.querySelector('#status-text');
 
   try {
-    landmarks = await landmarkLoader.loadAll();
+    landmarks = await landmarkLoader.loadAll(undefined, undefined, (loaded, total) => {
+      const progress = 25 + Math.round((loaded / total) * 70);
+      loadingScreen.setProgress(progress);
+    });
   } catch (err) {
     console.error('Failed to load landmarks:', err);
   }
@@ -57,6 +65,9 @@ async function bootstrap() {
   // Mount reactive sidebar navigation and feature controls
   setupSidebarUI(sceneManager, dragonEffects, ground, oceanAudio, () => cauRongModel, () => nguHanhSonModel);
 
+  // Render initial frame behind preloader curtain
+  sceneManager.render();
+
   // Animation and render loop
   let lastTime = performance.now();
 
@@ -77,6 +88,9 @@ async function bootstrap() {
   }
 
   requestAnimationFrame(animate);
+
+  // Reveal the 3D world smoothly with fade-out curtain
+  await loadingScreen.finish();
 }
 
 /**
