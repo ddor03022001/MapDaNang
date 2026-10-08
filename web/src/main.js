@@ -1,34 +1,47 @@
 import { SceneManager } from './scene/SceneManager.js';
 import { Ground } from './scene/Ground.js';
 import { LandmarkLoader } from './landmarks/LandmarkLoader.js';
-import { DragonEffects } from './scene/DragonEffects.js';
+import { DragonEffects } from './landmarks/cau-rong/DragonEffects.js';
+import { AudioSynthesizer } from './core/AudioSynthesizer.js';
+import { LANDMARK_REGISTRY, getLandmarkConfig } from './landmarks/registry.js';
 
-const infoPanel = document.querySelector('#info-panel');
-
+/**
+ * Main application bootstrap routine.
+ * Initializes 3D scene, geographic terrain, procedural landmarks, audio engines,
+ * and reactive UI controls.
+ */
 async function bootstrap() {
   const sceneManager = new SceneManager('#app');
 
-  // Cảnh quan Sông Hàn & bờ kè Đà Nẵng
+  // Initialize geographical environment (Han River, city grid, My Khe beach)
   const ground = new Ground();
   ground.addTo(sceneManager.scene);
 
-  // Hệ thống hiệu ứng Phun lửa / Phun nước / LED đêm
+  // Initialize landmark-specific visual effects
   const dragonEffects = new DragonEffects(sceneManager.scene);
+
+  // Procedural ocean audio synthesizer (zero external audio assets required)
+  const oceanAudio = new AudioSynthesizer();
 
   const landmarkLoader = new LandmarkLoader();
   let landmarks = [];
   let cauRongModel = null;
+  let nguHanhSonModel = null;
+
+  const statusText = document.querySelector('#status-text');
 
   try {
     landmarks = await landmarkLoader.loadAll();
   } catch (err) {
-    console.error('Không tải được danh sách địa danh:', err);
+    console.error('Failed to load landmarks:', err);
   }
 
   if (landmarks.length === 0) {
-    infoPanel.textContent = 'Đang chờ tải mô hình Cầu Rồng...';
+    if (statusText) statusText.textContent = 'Awaiting Dragon Bridge 3D model...';
   } else {
-    infoPanel.textContent = `Đã nạp ${landmarks.length} địa danh 3D (${landmarks.map((l) => l.name).join(', ')})`;
+    if (statusText) {
+      statusText.textContent = `Loaded ${landmarks.length} 3D landmarks (${landmarks.map((l) => l.name).join(', ')})`;
+    }
   }
 
   landmarks.forEach((landmark) => {
@@ -36,12 +49,15 @@ async function bootstrap() {
     if (landmark.id === 'cau-rong') {
       cauRongModel = landmark.object3D;
     }
+    if (landmark.id === 'nguhanh-son') {
+      nguHanhSonModel = landmark.object3D;
+    }
   });
 
-  // Thiết lập các nút điều khiển UI tương tác
-  setupUI(sceneManager, dragonEffects, ground, () => cauRongModel);
+  // Mount reactive sidebar navigation and feature controls
+  setupSidebarUI(sceneManager, dragonEffects, ground, oceanAudio, () => cauRongModel, () => nguHanhSonModel);
 
-  // Vòng lặp Render & Animation
+  // Animation and render loop
   let lastTime = performance.now();
 
   function animate(now) {
@@ -50,10 +66,10 @@ async function bootstrap() {
     lastTime = now;
     const time = now / 1000;
 
-    // Sóng nước sông Hàn & Xe cộ giao thông
+    // Update environmental animations (river currents, traffic lanes, ocean waves)
     ground.update(time, delta);
 
-    // Cập nhật Camera và hiệu ứng rồng
+    // Update smooth camera transitions and particle systems
     sceneManager.update(delta);
     dragonEffects.update(delta, time, cauRongModel);
 
@@ -63,141 +79,306 @@ async function bootstrap() {
   requestAnimationFrame(animate);
 }
 
-function setupUI(sceneManager, dragonEffects, ground, getBridgeModel) {
-  const cardTitle = document.querySelector('.landmark-card h2');
-  const cardSub = document.querySelector('.landmark-card .subtitle');
-  const cardDesc = document.querySelector('.landmark-card p');
-  const cardStats = document.querySelector('.landmark-card .stats-grid');
+/**
+ * Sets up sidebar panel, lighting toggles, landmark navigation tabs,
+ * camera controls, and landmark-specific interactive features.
+ * 
+ * @param {SceneManager} sceneManager 
+ * @param {DragonEffects} dragonEffects 
+ * @param {Ground} ground 
+ * @param {AudioSynthesizer} oceanAudio 
+ * @param {() => THREE.Object3D|null} getBridgeModel 
+ * @param {() => THREE.Object3D|null} [getNhsModel]
+ */
+function setupSidebarUI(sceneManager, dragonEffects, ground, oceanAudio, getBridgeModel, getNhsModel) {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  const toggleIcon = document.getElementById('toggle-icon');
+  const detailsContainer = document.getElementById('landmark-details');
+  const navTabs = document.querySelectorAll('.nav-tab');
 
-  function updateCard(type) {
-    if (!cardTitle || !cardStats) return;
-    if (type === 'song-han') {
-      cardTitle.innerHTML = 'Cầu Sông Hàn <span>🌉</span>';
-      cardSub.textContent = 'Han River Swing Bridge • Cầu quay đầu tiên tại VN';
-      cardDesc.textContent = 'Cây cầu quay lịch sử kết nối đường Lê Duẩn (Hải Châu) và Phạm Văn Đồng (Sơn Trà). Nhịp giữa có khả năng xoay 90 độ cho tàu bè trọng tải lớn qua lại.';
-      cardStats.innerHTML = `
-        <div class="stat-item"><div class="stat-label">Chiều dài thật</div><div class="stat-val">487.7 m</div></div>
-        <div class="stat-item"><div class="stat-label">Chiều rộng cầu</div><div class="stat-val">12.9 m</div></div>
-        <div class="stat-item"><div class="stat-label">Nhịp dầm quay</div><div class="stat-val">122.8 m (xoay 90°)</div></div>
-        <div class="stat-item"><div class="stat-label">Tháp cáp chữ A</div><div class="stat-val">Cao 25.3 m • Dây văng</div></div>
-      `;
-    } else if (type === 'city') {
-      cardTitle.innerHTML = 'Đô Thị Sông Hàn <span>🏙️</span>';
-      cardSub.textContent = 'Trung tâm TP Đà Nẵng • Hải Châu & Sơn Trà';
-      cardDesc.textContent = 'Mạng lưới đường xá và các công trình biểu tượng ven sông Hàn: Tòa nhà Trung tâm Hành chính, Novotel, Hilton, Công viên APEC, Bảo tàng Chăm, Cầu Tình Yêu.';
-      cardStats.innerHTML = `
-        <div class="stat-item"><div class="stat-label">Trục Đông - Tây</div><div class="stat-val">Nguyễn Văn Linh / Võ Văn Kiệt</div></div>
-        <div class="stat-item"><div class="stat-label">Trục ven sông</div><div class="stat-val">Bạch Đằng / Trần Hưng Đạo</div></div>
-        <div class="stat-item"><div class="stat-label">Tòa nhà cao nhất</div><div class="stat-val">TTHC 34 tầng (167m)</div></div>
-        <div class="stat-item"><div class="stat-label">Công viên biểu tượng</div><div class="stat-val">Mái vòm APEC • Cầu Tình Yêu</div></div>
-      `;
-    } else if (type === 'my-khe') {
-      cardTitle.innerHTML = 'Biển Mỹ Khê <span>🏖️</span>';
-      cardSub.textContent = 'My Khe Beach • Top 6 bãi biển quyến rũ nhất hành tinh';
-      cardDesc.textContent = 'Bãi biển nổi tiếng thế giới được tạp chí Forbes vinh danh với bờ cát trắng mịn thoai thoải, làn nước trong xanh màu ngọc bích, rặng dừa nghiêng bóng mát và sóng biển dạt dào vỗ bờ.';
-      cardStats.innerHTML = `
-        <div class="stat-item"><div class="stat-label">Bờ biển Đà Nẵng</div><div class="stat-val">Dài ~10 km (biển Mỹ Khê)</div></div>
-        <div class="stat-item"><div class="stat-label">Bờ cát & Sóng biển</div><div class="stat-val">Cát trắng mịn • Sóng Gerstner</div></div>
-        <div class="stat-item"><div class="stat-label">Vinh danh Forbes</div><div class="stat-val">Top 6 đẹp nhất hành tinh</div></div>
-        <div class="stat-item"><div class="stat-label">Đặc trưng văn hóa</div><div class="stat-val">Thuyền thúng tre • Rặng dừa</div></div>
-      `;
-    } else {
-      cardTitle.innerHTML = 'Cầu Rồng Đà Nẵng <span>⭐</span>';
-      cardSub.textContent = 'Dragon Bridge • Biểu tượng sông Hàn';
-      cardDesc.textContent = 'Cây cầu vòm thép đơn độc đáo mô phỏng con rồng thời Lý bay ra biển Đông. Đầu rồng ngẩng cao tại bờ Đông (Sơn Trà), đuôi hoa sen nở tại bờ Tây (Hải Châu).';
-      cardStats.innerHTML = `
-        <div class="stat-item"><div class="stat-label">Chiều dài thật</div><div class="stat-val">666 m (6 làn xe)</div></div>
-        <div class="stat-item"><div class="stat-label">Chiều rộng mặt cầu</div><div class="stat-val">37.5 m</div></div>
-        <div class="stat-item"><div class="stat-label">Chiều cao vòm rồng</div><div class="stat-val">48.0 m (5 nhịp)</div></div>
-        <div class="stat-item"><div class="stat-label">Đầu rồng thời Lý</div><div class="stat-val">18.2 m • 194.1 tấn</div></div>
-      `;
-    }
-  }
-
-  // 1. Góc nhìn Camera
-  const camButtons = {
-    'cam-overview': 'overview',
-    'cam-head': 'head',
-    'cam-tail': 'tail',
-    'cam-deck': 'deck',
-    'cam-river': 'river',
-    'cam-song-han': 'song-han',
-    'cam-city': 'city',
-    'cam-my-khe': 'my-khe'
+  // Internal reactive application state
+  const state = {
+    activeLandmark: 'overview',
+    activeCamera: 'overview:city',
+    isFireActive: false,
+    isWaterActive: false,
+    isWaveSurgeActive: false,
+    isAudioActive: false,
+    isTrafficActive: true,
+    isDivineLightActive: true,
+    currentLighting: 'day'
   };
 
-  const allCamBtns = Object.keys(camButtons).map(id => document.getElementById(id)).filter(Boolean);
+  // 1. Sidebar Collapse/Expand Toggle
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      if (toggleIcon) {
+        toggleIcon.textContent = isCollapsed ? '▶' : '◀';
+      }
+    });
+  }
 
-  Object.entries(camButtons).forEach(([id, presetKey]) => {
-    const btn = document.getElementById(id);
-    if (btn) {
-      btn.addEventListener('click', () => {
-        allCamBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        sceneManager.setCameraPreset(presetKey);
-        updateCard(presetKey);
-      });
-    }
-  });
-
-  // 2. Chế độ Bầu trời & Ánh sáng
-  const lightButtons = {
+  // 2. Lighting Mode Controls (Day / Sunset / Night)
+  const lightModeButtons = {
     'light-day': 'day',
     'light-sunset': 'sunset',
     'light-night': 'night'
   };
 
-  const allLightBtns = Object.keys(lightButtons).map(id => document.getElementById(id)).filter(Boolean);
+  function setLighting(mode) {
+    state.currentLighting = mode;
+    Object.keys(lightModeButtons).forEach((btnId) => {
+      const btn = document.getElementById(btnId);
+      if (btn) btn.classList.toggle('active', lightModeButtons[btnId] === mode);
+    });
 
-  Object.entries(lightButtons).forEach(([id, mode]) => {
-    const btn = document.getElementById(id);
+    sceneManager.setLightingMode(mode);
+    dragonEffects.setNightMode(mode === 'night', getBridgeModel());
+    if (ground && ground.setNightMode) {
+      ground.setNightMode(mode === 'night', getNhsModel ? getNhsModel() : null);
+    }
+  }
+
+  Object.entries(lightModeButtons).forEach(([btnId, mode]) => {
+    const btn = document.getElementById(btnId);
     if (btn) {
-      btn.addEventListener('click', () => {
-        allLightBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        sceneManager.setLightingMode(mode);
-        dragonEffects.setNightMode(mode === 'night', getBridgeModel());
-        if (ground && ground.setNightMode) {
-          ground.setNightMode(mode === 'night');
-        }
-      });
+      btn.addEventListener('click', () => setLighting(mode));
     }
   });
 
-  // 3. Trình diễn Phun Lửa / Phun Nước
-  const fireBtn = document.getElementById('effect-fire');
-  const waterBtn = document.getElementById('effect-water');
+  // 3. Render Landmark Detail & Feature Action Panel
+  function renderLandmarkPanel(landmarkKey) {
+    const config = getLandmarkConfig(landmarkKey);
+    if (!config || !detailsContainer) return;
 
-  if (fireBtn) {
-    fireBtn.addEventListener('click', () => {
-      const willBeActive = !fireBtn.classList.contains('active');
-      fireBtn.classList.toggle('active', willBeActive);
-      if (waterBtn) waterBtn.classList.remove('active');
-      dragonEffects.toggleFire(willBeActive);
+    state.activeLandmark = landmarkKey;
+    state.activeCamera = config.defaultCamera;
 
-      // Tự động lia camera về đầu rồng nếu đang ở xa
-      if (willBeActive && sceneManager.camera.position.length() > 6) {
-        sceneManager.setCameraPreset('head');
-        allCamBtns.forEach(b => b.classList.remove('active'));
-        document.getElementById('cam-head')?.classList.add('active');
-      }
+    // Synchronize active tab styling
+    navTabs.forEach((tab) => {
+      tab.classList.toggle('active', tab.getAttribute('data-landmark') === landmarkKey);
+    });
+
+    // Build detail view markup
+    let html = `
+      <!-- Landmark Header -->
+      <div class="landmark-header">
+        <h2>${config.name} <span>${config.icon}</span></h2>
+        <div class="subtitle">${config.subtitle}</div>
+        <p class="desc">${config.desc}</p>
+      </div>
+
+      <!-- Real-world Engineering Specifications -->
+      <div class="stats-grid">
+        ${config.stats.map(s => `
+          <div class="stat-item">
+            <div class="stat-label">${s.label}</div>
+            <div class="stat-val">${s.val}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Landmark Perspective Presets -->
+      <div class="section-block">
+        <div class="section-title">Góc Nhìn Khám Phá</div>
+        <div class="action-grid">
+          ${config.cameras.map(c => `
+            <button class="btn-action ${c.preset === state.activeCamera ? 'active' : ''}" data-cam="${c.preset}">
+              <span>${c.icon}</span> ${c.label}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    // Landmark-Specific Interactive Features
+    if (config.features && config.features.length > 0) {
+      html += `
+        <div class="section-block">
+          <div class="section-title">Tính Năng Tương Tác</div>
+          <div class="action-grid">
+            ${config.features.map(f => {
+              let isActive = false;
+              let labelText = f.label;
+
+              if (f.type === 'fire') isActive = state.isFireActive;
+              else if (f.type === 'water') isActive = state.isWaterActive;
+              else if (f.type === 'wave') {
+                isActive = state.isWaveSurgeActive;
+                labelText = isActive ? 'Sóng Lớn Cuộn Trào' : 'Sóng Biển Êm Dịu';
+              }
+              else if (f.type === 'audio') {
+                isActive = state.isAudioActive;
+                labelText = isActive ? 'Tắt Tiếng Sóng' : 'Tiếng Sóng Biển';
+              }
+              else if (f.type === 'toggle') {
+                isActive = state.isTrafficActive;
+                labelText = isActive ? 'Đang Chạy Xe' : 'Tạm Dừng Xe';
+              }
+              else if (f.type === 'light-beam') {
+                isActive = state.isDivineLightActive;
+                labelText = isActive ? 'Tắt Luồng Sáng' : 'Luồng Sáng Giếng Trời';
+              }
+              else if (f.type === 'bell') {
+                isActive = false;
+                labelText = f.label;
+              }
+
+              return `
+                <button class="btn-action ${f.className || ''} ${isActive ? 'active' : ''}" data-feature="${f.id}" id="${f.id}">
+                  <span>${f.icon}</span> <span class="feat-label">${labelText}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    detailsContainer.innerHTML = html;
+
+    // Bind camera angle button events
+    detailsContainer.querySelectorAll('[data-cam]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const preset = btn.getAttribute('data-cam');
+        state.activeCamera = preset;
+        detailsContainer.querySelectorAll('[data-cam]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sceneManager.setCameraPreset(preset);
+      });
+    });
+
+    // Bind feature action handlers
+    detailsContainer.querySelectorAll('[data-feature]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const featId = btn.getAttribute('data-feature');
+        handleFeatureAction(featId, btn);
+      });
     });
   }
 
-  if (waterBtn) {
-    waterBtn.addEventListener('click', () => {
-      const willBeActive = !waterBtn.classList.contains('active');
-      waterBtn.classList.toggle('active', willBeActive);
-      if (fireBtn) fireBtn.classList.remove('active');
-      dragonEffects.toggleWater(willBeActive);
+  /**
+   * Dispatches feature button interactions based on identifier.
+   * @param {string} featId 
+   * @param {HTMLElement} btn 
+   */
+  function handleFeatureAction(featId, btn) {
+    if (featId === 'feat-fire') {
+      state.isFireActive = !state.isFireActive;
+      if (state.isFireActive) {
+        state.isWaterActive = false;
+        const wBtn = document.getElementById('feat-water');
+        if (wBtn) wBtn.classList.remove('active');
+        dragonEffects.toggleWater(false);
+      }
+      btn.classList.toggle('active', state.isFireActive);
+      dragonEffects.toggleFire(state.isFireActive);
 
-      if (willBeActive && sceneManager.camera.position.length() > 6) {
-        sceneManager.setCameraPreset('head');
-        allCamBtns.forEach(b => b.classList.remove('active'));
-        document.getElementById('cam-head')?.classList.add('active');
+      // Focus camera on dragon head if user is zoomed far away
+      if (state.isFireActive && sceneManager.camera.position.length() > 6) {
+        sceneManager.setCameraPreset('cau-rong:head');
+        state.activeCamera = 'cau-rong:head';
+        detailsContainer.querySelectorAll('[data-cam]').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-cam') === 'cau-rong:head');
+        });
+      }
+
+    } else if (featId === 'feat-water') {
+      state.isWaterActive = !state.isWaterActive;
+      if (state.isWaterActive) {
+        state.isFireActive = false;
+        const fBtn = document.getElementById('feat-fire');
+        if (fBtn) fBtn.classList.remove('active');
+        dragonEffects.toggleFire(false);
+      }
+      btn.classList.toggle('active', state.isWaterActive);
+      dragonEffects.toggleWater(state.isWaterActive);
+
+      // Focus camera on dragon head if user is zoomed far away
+      if (state.isWaterActive && sceneManager.camera.position.length() > 6) {
+        sceneManager.setCameraPreset('cau-rong:head');
+        state.activeCamera = 'cau-rong:head';
+        detailsContainer.querySelectorAll('[data-cam]').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-cam') === 'cau-rong:head');
+        });
+      }
+
+    } else if (featId === 'feat-sh-night') {
+      setLighting('night');
+      sceneManager.setCameraPreset('cau-song-han:overview');
+      state.activeCamera = 'cau-song-han:overview';
+      detailsContainer.querySelectorAll('[data-cam]').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-cam') === 'cau-song-han:overview');
+      });
+
+    } else if (featId === 'feat-wave-surge') {
+      state.isWaveSurgeActive = !state.isWaveSurgeActive;
+      btn.classList.toggle('active', state.isWaveSurgeActive);
+      const lbl = btn.querySelector('.feat-label');
+      if (lbl) lbl.textContent = state.isWaveSurgeActive ? 'Sóng Lớn Cuộn Trào' : 'Sóng Biển Êm Dịu';
+      if (ground && ground.setWaveIntensity) {
+        ground.setWaveIntensity(state.isWaveSurgeActive ? 2.0 : 1.0);
+      }
+
+    } else if (featId === 'feat-ocean-audio') {
+      state.isAudioActive = oceanAudio.toggle();
+      btn.classList.toggle('active', state.isAudioActive);
+      const lbl = btn.querySelector('.feat-label');
+      if (lbl) lbl.textContent = state.isAudioActive ? 'Tắt Tiếng Sóng' : 'Tiếng Sóng Biển';
+
+    } else if (featId === 'feat-traffic') {
+      state.isTrafficActive = !state.isTrafficActive;
+      btn.classList.toggle('active', state.isTrafficActive);
+      const lbl = btn.querySelector('.feat-label');
+      if (lbl) lbl.textContent = state.isTrafficActive ? 'Đang Chạy Xe' : 'Tạm Dừng Xe';
+      if (ground && ground.setTrafficEnabled) {
+        ground.setTrafficEnabled(state.isTrafficActive);
+      }
+
+    } else if (featId === 'feat-temple-bell') {
+      // Ring the resonant bronze temple bell of Linh Ung Pagoda
+      oceanAudio.playTempleBell();
+      btn.classList.add('active');
+      setTimeout(() => btn.classList.remove('active'), 1500);
+
+    } else if (featId === 'feat-divine-light') {
+      // Toggle mystical volumetric god ray beam in Huyen Khong Cave
+      state.isDivineLightActive = !state.isDivineLightActive;
+      btn.classList.toggle('active', state.isDivineLightActive);
+      const lbl = btn.querySelector('.feat-label');
+      if (lbl) lbl.textContent = state.isDivineLightActive ? 'Tắt Luồng Sáng' : 'Luồng Sáng Giếng Trời';
+      if (ground && ground.toggleDivineLight) {
+        ground.toggleDivineLight(state.isDivineLightActive);
+      }
+
+    } else if (featId === 'feat-nhs-night') {
+      // Night mode with illuminated Xa Loi Stupa lanterns
+      setLighting('night');
+      sceneManager.setCameraPreset('ngu-hanh-son:thap-xa-loi');
+      state.activeCamera = 'ngu-hanh-son:thap-xa-loi';
+      detailsContainer.querySelectorAll('[data-cam]').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-cam') === 'ngu-hanh-son:thap-xa-loi');
+      });
+    }
+  }
+
+  // 4. Bind Landmark Navigation Tabs
+  navTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const landmarkKey = tab.getAttribute('data-landmark');
+      const config = getLandmarkConfig(landmarkKey);
+      if (config) {
+        sceneManager.setCameraPreset(config.defaultCamera);
+        renderLandmarkPanel(landmarkKey);
       }
     });
-  }
+  });
+
+  // Initial landing state
+  renderLandmarkPanel('overview');
+  sceneManager.setCameraPreset('overview:city');
 }
 
 bootstrap();

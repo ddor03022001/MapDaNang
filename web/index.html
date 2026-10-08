@@ -3,20 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bản đồ 3D Đà Nẵng — Cầu Rồng</title>
+    <title>Bản đồ 3D Đà Nẵng — Khám Phá Đô Thị & Danh Thắng</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
-        --bg-glass: rgba(13, 20, 32, 0.72);
-        --bg-glass-active: rgba(255, 186, 8, 0.22);
+        --bg-glass: rgba(12, 18, 28, 0.84);
+        --bg-glass-card: rgba(22, 32, 48, 0.6);
+        --bg-glass-hover: rgba(255, 255, 255, 0.08);
         --border-glass: rgba(255, 255, 255, 0.12);
+        --border-glass-light: rgba(255, 255, 255, 0.06);
         --accent-gold: #ffba08;
+        --accent-gold-glow: rgba(255, 186, 8, 0.35);
         --accent-cyan: #00d2ff;
         --accent-fire: #ff4d00;
-        --text-main: #f0f4f8;
-        --text-sub: #9ab0c4;
+        --accent-emerald: #10b981;
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --sidebar-w: 388px;
       }
 
       * {
@@ -44,25 +49,82 @@
         z-index: 1;
       }
 
-      /* Top Header */
-      .header-bar {
+      /* Unified Left Sidebar */
+      .sidebar {
         position: fixed;
         top: 16px;
         left: 16px;
-        z-index: 20;
+        bottom: 16px;
+        width: var(--sidebar-w);
+        max-height: calc(100vh - 32px);
+        z-index: 50;
+        background: var(--bg-glass);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(calc(-100% - 24px));
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      /* Sidebar Toggle Button */
+      .sidebar-toggle-btn {
+        position: fixed;
+        top: 24px;
+        left: calc(var(--sidebar-w) + 26px);
+        z-index: 55;
         background: var(--bg-glass);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--border-glass);
-        border-radius: 14px;
-        padding: 12px 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        border-radius: 12px;
+        color: var(--text-main);
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .logo-icon {
+      .sidebar.collapsed ~ .sidebar-toggle-btn {
+        left: 16px;
+      }
+
+      .sidebar-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--accent-gold);
+        color: var(--accent-gold);
+        transform: scale(1.06);
+      }
+
+      /* Sidebar Header */
+      .sidebar-header {
+        padding: 16px 18px 12px;
+        border-bottom: 1px solid var(--border-glass-light);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-icon {
         width: 38px;
         height: 38px;
         background: linear-gradient(135deg, #ffba08, #ff6b00);
@@ -72,304 +134,420 @@
         justify-content: center;
         font-size: 20px;
         box-shadow: 0 0 16px rgba(255, 186, 8, 0.45);
+        flex-shrink: 0;
       }
 
-      .header-titles h1 {
+      .brand-info h1 {
         margin: 0;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
         color: #ffffff;
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .header-titles p {
-        margin: 2px 0 0 0;
-        font-size: 12px;
-        color: var(--text-sub);
-      }
-
-      .badge-ready {
+      .badge-live {
         font-size: 10px;
-        padding: 2px 8px;
-        background: rgba(34, 197, 94, 0.2);
-        border: 1px solid rgba(34, 197, 94, 0.4);
-        color: #4ade80;
-        border-radius: 12px;
+        padding: 2px 7px;
+        background: rgba(16, 185, 129, 0.18);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #34d399;
+        border-radius: 10px;
         font-weight: 600;
       }
 
-      /* Floating Controls Panel (Top Right) */
-      .control-panel {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        z-index: 20;
-        background: var(--bg-glass);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--border-glass);
-        border-radius: 16px;
-        padding: 14px 18px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        min-width: 280px;
-      }
-
-      .section-label {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
+      .brand-info p {
+        margin: 3px 0 0 0;
+        font-size: 11.5px;
         color: var(--text-sub);
-        margin-bottom: 6px;
       }
 
-      .btn-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .btn {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid var(--border-glass);
-        color: var(--text-main);
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 500;
-        padding: 7px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Lighting Modes Pill Bar */
+      .lighting-bar {
         display: flex;
         align-items: center;
-        gap: 6px;
+        background: rgba(0, 0, 0, 0.28);
+        border-radius: 10px;
+        padding: 3px;
+        border: 1px solid var(--border-glass-light);
+        gap: 4px;
       }
 
-      .btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.3);
+      .light-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-sub);
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 4px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .light-btn:hover {
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .light-btn.active {
+        background: rgba(255, 186, 8, 0.18);
+        color: var(--accent-gold);
+        border: 1px solid rgba(255, 186, 8, 0.35);
+        box-shadow: 0 0 10px rgba(255, 186, 8, 0.2);
+      }
+
+      /* Landmark Navigation Tabs */
+      .landmark-nav {
+        padding: 12px 14px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+        border-bottom: 1px solid var(--border-glass-light);
+        background: rgba(0, 0, 0, 0.15);
+      }
+
+      .nav-tab {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-glass-light);
+        border-radius: 10px;
+        padding: 8px 4px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        color: var(--text-sub);
+        font-family: inherit;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .nav-tab .tab-icon {
+        font-size: 18px;
+        transition: transform 0.2s ease;
+      }
+
+      .nav-tab .tab-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .nav-tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: var(--text-main);
         transform: translateY(-1px);
       }
 
-      .btn.active {
-        background: var(--bg-glass-active);
+      .nav-tab.active {
+        background: linear-gradient(135deg, rgba(255, 186, 8, 0.22), rgba(255, 107, 0, 0.12));
         border-color: var(--accent-gold);
         color: var(--accent-gold);
-        box-shadow: 0 0 14px rgba(255, 186, 8, 0.25);
+        box-shadow: 0 0 14px var(--accent-gold-glow);
       }
 
-      .btn-fire {
-        background: rgba(255, 77, 0, 0.15);
-        border-color: rgba(255, 77, 0, 0.35);
-        color: #ff7733;
-      }
-      .btn-fire:hover, .btn-fire.active {
-        background: rgba(255, 77, 0, 0.35);
-        border-color: var(--accent-fire);
-        color: #ffffff;
-        box-shadow: 0 0 16px rgba(255, 77, 0, 0.45);
+      .nav-tab.active .tab-icon {
+        transform: scale(1.15);
       }
 
-      .btn-water {
-        background: rgba(0, 210, 255, 0.15);
-        border-color: rgba(0, 210, 255, 0.35);
-        color: #38bdf8;
-      }
-      .btn-water:hover, .btn-water.active {
-        background: rgba(0, 210, 255, 0.35);
-        border-color: var(--accent-cyan);
-        color: #ffffff;
-        box-shadow: 0 0 16px rgba(0, 210, 255, 0.45);
-      }
-
-      /* Landmark Details Card (Bottom Left) */
-      .landmark-card {
-        position: fixed;
-        bottom: 16px;
-        left: 16px;
-        z-index: 20;
-        max-width: 380px;
-        background: var(--bg-glass);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--border-glass);
-        border-radius: 16px;
-        padding: 16px 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      /* Scrollable Landmark Content Area */
+      .sidebar-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
       }
 
-      .landmark-card h2 {
+      .sidebar-scroll::-webkit-scrollbar {
+        width: 5px;
+      }
+      .sidebar-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+
+      /* Landmark Header Details */
+      .landmark-header h2 {
         margin: 0;
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 700;
-        color: var(--accent-gold);
+        color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: space-between;
       }
 
-      .landmark-card .subtitle {
+      .landmark-header .subtitle {
+        font-size: 11.5px;
+        color: var(--accent-gold);
+        margin: 4px 0 8px;
+        font-weight: 500;
+      }
+
+      .landmark-header .desc {
+        margin: 0;
         font-size: 12px;
-        color: var(--text-sub);
-        margin: 4px 0 10px 0;
+        line-height: 1.55;
+        color: #cbd5e1;
       }
 
-      .landmark-card p {
-        margin: 0 0 12px 0;
-        font-size: 12.5px;
-        line-height: 1.5;
-        color: #d1d9e2;
-      }
-
+      /* Stats Grid */
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--bg-glass-card);
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border-glass-light);
       }
 
       .stat-item {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.03);
         border-radius: 8px;
         padding: 6px 10px;
       }
 
       .stat-label {
-        font-size: 10.5px;
+        font-size: 10px;
         color: var(--text-sub);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 500;
       }
 
       .stat-val {
-        font-size: 13px;
-        font-weight: 600;
+        font-size: 12.5px;
+        font-weight: 700;
         color: #ffffff;
         margin-top: 2px;
       }
 
-      /* Help footer */
-      .hint-bar {
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        z-index: 20;
-        background: rgba(13, 20, 32, 0.6);
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--border-glass);
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 11px;
+      /* Section Block (Camera Angles & Actions) */
+      .section-block {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .section-title {
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
         color: var(--text-sub);
         display: flex;
-        gap: 12px;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-glass-light);
+      }
+
+      /* Action & Camera Button Grids */
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+
+      .action-grid.full-width {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-action {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 11.5px;
+        font-weight: 500;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .btn-action:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .btn-action.active {
+        background: var(--bg-glass-card);
+        border-color: var(--accent-gold);
+        color: var(--accent-gold);
+        box-shadow: 0 0 12px var(--accent-gold-glow);
+      }
+
+      /* Feature Special Buttons */
+      .btn-fire {
+        background: rgba(255, 77, 0, 0.16);
+        border-color: rgba(255, 77, 0, 0.38);
+        color: #ff8547;
+      }
+      .btn-fire:hover, .btn-fire.active {
+        background: linear-gradient(135deg, rgba(255, 77, 0, 0.4), rgba(255, 140, 0, 0.35));
+        border-color: var(--accent-fire);
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(255, 77, 0, 0.5);
+      }
+
+      .btn-water {
+        background: rgba(0, 210, 255, 0.16);
+        border-color: rgba(0, 210, 255, 0.38);
+        color: #38bdf8;
+      }
+      .btn-water:hover, .btn-water.active {
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.4), rgba(14, 165, 233, 0.35));
+        border-color: var(--accent-cyan);
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(0, 210, 255, 0.5);
+      }
+
+      .btn-wave {
+        background: rgba(16, 185, 129, 0.16);
+        border-color: rgba(16, 185, 129, 0.38);
+        color: #34d399;
+      }
+      .btn-wave:hover, .btn-wave.active {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.35));
+        border-color: var(--accent-emerald);
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+      }
+
+      .btn-audio {
+        background: rgba(168, 85, 247, 0.16);
+        border-color: rgba(168, 85, 247, 0.38);
+        color: #c084fc;
+      }
+      .btn-audio:hover, .btn-audio.active {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.35));
+        border-color: #a855f7;
+        color: #ffffff;
+        box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+      }
+
+      /* Sidebar Footer Hints */
+      .sidebar-footer {
+        padding: 10px 18px;
+        border-top: 1px solid var(--border-glass-light);
+        background: rgba(0, 0, 0, 0.22);
+        display: flex;
+        justify-content: space-between;
+        font-size: 10.5px;
+        color: var(--text-sub);
+      }
+
+      .hint-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
 
       @media (max-width: 768px) {
-        .landmark-card {
-          max-width: calc(100vw - 32px);
-          font-size: 11px;
-        }
-        .control-panel {
-          min-width: unset;
+        .sidebar {
           width: calc(100vw - 32px);
+          max-height: 55vh;
           top: unset;
           bottom: 16px;
-          right: 16px;
         }
-        .landmark-card {
-          display: none;
+        .sidebar-toggle-btn {
+          top: 16px;
+          left: 16px;
         }
       }
     </style>
   </head>
   <body>
+    <!-- Three.js Canvas Container -->
     <div id="app"></div>
 
-    <!-- Header -->
-    <div class="header-bar">
-      <div class="logo-icon">🐉</div>
-      <div class="header-titles">
-        <h1>Bản đồ 3D Đà Nẵng <span class="badge-ready">Model 1:1 Chuẩn</span></h1>
-        <p id="info-panel">Đang khởi tạo bản đồ số...</p>
-      </div>
-    </div>
+    <!-- Unified Left Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <!-- 1. Header & Quick Day/Night Selector -->
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🐉</div>
+          <div class="brand-info">
+            <h1>Bản đồ 3D Đà Nẵng <span class="badge-live">3D Model</span></h1>
+            <p id="status-text">Đang kết nối mô hình không gian...</p>
+          </div>
+        </div>
 
-    <!-- Floating Controls Panel -->
-    <div class="control-panel">
-      <!-- Camera Angles -->
-      <div>
-        <div class="section-label">Góc Nhìn Khám Phá</div>
-        <div class="btn-group">
-          <button class="btn active" id="cam-overview">🌐 Toàn Cảnh</button>
-          <button class="btn" id="cam-head">🐉 Đầu Rồng</button>
-          <button class="btn" id="cam-tail">🪷 Đuôi Rồng</button>
-          <button class="btn" id="cam-deck">🛣️ Mặt Cầu</button>
-          <button class="btn" id="cam-river">🚢 Sông Hàn</button>
-          <button class="btn" id="cam-song-han">🌉 Cầu Sông Hàn</button>
-          <button class="btn" id="cam-city">🏙️ Đô Thị 2 Bờ</button>
-          <button class="btn" id="cam-my-khe">🏖️ Biển Mỹ Khê</button>
+        <div class="lighting-bar">
+          <button class="light-btn active" id="light-day" title="Ban ngày">☀️ <span>Ngày</span></button>
+          <button class="light-btn" id="light-sunset" title="Hoàng hôn">🌅 <span>Chiều</span></button>
+          <button class="light-btn" id="light-night" title="Ban đêm (LED)">🌙 <span>Đêm</span></button>
         </div>
       </div>
 
-      <!-- Lighting & Atmosphere -->
-      <div>
-        <div class="section-label">Bầu Trời & Ánh Sáng</div>
-        <div class="btn-group">
-          <button class="btn active" id="light-day">☀️ Ban Ngày</button>
-          <button class="btn" id="light-sunset">🌅 Hoàng Hôn</button>
-          <button class="btn" id="light-night">🌙 Ban Đêm (LED)</button>
-        </div>
+      <!-- 2. Landmark Selector Nav Tabs -->
+      <nav class="landmark-nav">
+        <button class="nav-tab active" data-landmark="overview" id="tab-overview">
+          <span class="tab-icon">🌐</span>
+          <span class="tab-label">Toàn Cảnh</span>
+        </button>
+        <button class="nav-tab" data-landmark="cau-rong" id="tab-cau-rong">
+          <span class="tab-icon">🐉</span>
+          <span class="tab-label">Cầu Rồng</span>
+        </button>
+        <button class="nav-tab" data-landmark="cau-song-han" id="tab-cau-song-han">
+          <span class="tab-icon">🌉</span>
+          <span class="tab-label">Cầu Sông Hàn</span>
+        </button>
+        <button class="nav-tab" data-landmark="my-khe" id="tab-my-khe">
+          <span class="tab-icon">🏖️</span>
+          <span class="tab-label">Biển Mỹ Khê</span>
+        </button>
+        <button class="nav-tab" data-landmark="ngu-hanh-son" id="tab-ngu-hanh-son">
+          <span class="tab-icon">⛰️</span>
+          <span class="tab-label">Ngũ Hành</span>
+        </button>
+      </nav>
+
+      <!-- 3. Dynamic Landmark Detail Content -->
+      <div class="sidebar-scroll" id="landmark-details">
+        <!-- Content will be injected dynamically by main.js -->
       </div>
 
-      <!-- Dragon Special Effects -->
-      <div>
-        <div class="section-label">Màn Trình Diễn Cầu Rồng</div>
-        <div class="btn-group">
-          <button class="btn btn-fire" id="effect-fire">🔥 Phun Lửa</button>
-          <button class="btn btn-water" id="effect-water">💧 Phun Nước</button>
-        </div>
+      <!-- 4. Mouse Control Guide Footer -->
+      <div class="sidebar-footer">
+        <span class="hint-item">🖱️ Chuột trái: Xoay</span>
+        <span class="hint-item">🔍 Cuộn: Zoom</span>
+        <span class="hint-item">✋ Chuột phải: Dời</span>
       </div>
-    </div>
+    </aside>
 
-    <!-- Landmark Details Card -->
-    <div class="landmark-card">
-      <h2>Cầu Rồng Đà Nẵng <span>⭐</span></h2>
-      <div class="subtitle">Dragon Bridge • Biểu tượng sông Hàn</div>
-      <p>
-        Cây cầu vòm thép đơn độc đáo mô phỏng con rồng thời Lý bay ra biển Đông. Đầu rồng ngẩng cao tại bờ Đông (Sơn Trà), đuôi hoa sen nở tại bờ Tây (Hải Châu).
-      </p>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-label">Chiều dài thật</div>
-          <div class="stat-val">666 m (6 làn xe)</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Chiều rộng mặt cầu</div>
-          <div class="stat-val">37.5 m</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Chiều cao vòm rồng</div>
-          <div class="stat-val">48.0 m (5 nhịp)</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Đầu rồng thời Lý</div>
-          <div class="stat-val">18.2 m • 194.1 tấn</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Interactive Hint Bar -->
-    <div class="hint-bar">
-      <span>🖱️ Chuột trái: Xoay 3D</span>
-      <span>🔍 Cuộn: Phóng to/nhỏ</span>
-      <span>✋ Chuột phải: Di chuyển</span>
-    </div>
+    <!-- Sidebar Collapse Toggle Button -->
+    <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Thu gọn / Mở rộng bảng điều khiển">
+      <span id="toggle-icon">◀</span>
+    </button>
 
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -1,13 +1,13 @@
 /**
- * Landmark: đại diện cho 1 địa danh đã được load vào scene.
- * Bọc lại metadata (từ landmarks.json) cùng với Object3D thực tế trong scene,
- * để dễ tra cứu, tương tác (click, hover, label) sau này.
+ * Landmark represents a distinct geospatial entity loaded into the 3D scene.
+ * Encapsulates metadata (from landmarks.json) and the underlying Three.js Object3D,
+ * enabling query capabilities, interactions (click, hover, focus), and lifecycle management.
  */
 export class Landmark {
   /**
-   * @param {object} data - metadata từ landmarks.json (id, name, gps, description...)
-   * @param {import('three').Object3D} object3D - root object đã load từ .glb
-   * @param {object} mapConfig - nội dung data/map-config.json (dùng để lấy scale.metersPerUnit)
+   * @param {object} data - Landmark metadata (id, name, gps, description, etc.)
+   * @param {import('three').Object3D} object3D - Root 3D object loaded from GLTF
+   * @param {object} mapConfig - Global scene configuration (scale, metersPerUnit)
    */
   constructor(data, object3D, mapConfig) {
     this.id = data.id;
@@ -22,10 +22,8 @@ export class Landmark {
     this.object3D.position.set(x, y, z);
     this.object3D.name = data.id;
 
-    // Model được dựng trong Blender theo đúng mét thật (1:1). Khi đặt vào scene
-    // tổng, phải thu nhỏ theo cùng tỉ lệ với scenePosition (map-config.json >
-    // scale.metersPerUnit), nếu không model sẽ đúng vị trí nhưng sai kích thước
-    // tương đối so với khoảng cách giữa các địa danh.
+    // Models are authored in real-world metric scale (1:1).
+    // Normalize to scene coordinates via mapConfig.scale.metersPerUnit.
     const metersPerUnit = mapConfig?.scale?.metersPerUnit ?? 1;
     const modelScale = 1 / metersPerUnit;
     this.object3D.scale.setScalar(modelScale);
@@ -38,6 +36,10 @@ export class Landmark {
     });
   }
 
+  /**
+   * Mounts the landmark 3D object to the target scene.
+   * @param {import('three').Scene} scene
+   */
   addTo(scene) {
     scene.add(this.object3D);
   }

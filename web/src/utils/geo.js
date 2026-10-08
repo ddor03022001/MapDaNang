@@ -1,20 +1,19 @@
 /**
- * geo.js — quy đổi toạ độ GPS thật sang toạ độ scene (Three.js), dùng chung
- * giữa script tính toán (Node, build-time) và app runtime (browser).
+ * geo.js — Converts real-world GPS coordinates (WGS84) to Three.js scene coordinates.
+ * Shared between build-time scripts (Node.js) and runtime clients (Browser).
  *
- * Phép chiếu: Equirectangular cục bộ (local tangent plane / flat-earth),
- * đủ chính xác cho phạm vi 1 thành phố. Xem chi tiết trong data/map-config.json.
- *
- * Quy ước trục:
- *   +X = hướng Đông (kinh độ tăng)
- *   +Z = hướng Nam (vĩ độ giảm) — để khớp Three.js (camera mặc định nhìn về -Z là hướng Bắc)
- *   Y  = độ cao (elevation), không tính từ GPS, lấy riêng theo dữ liệu địa hình
+ * Projection: Local equirectangular tangent plane, optimal for city-scale precision.
+ * Coordinate axes convention:
+ *   +X = East (increasing longitude)
+ *   +Z = South (decreasing latitude) — aligns with Three.js default view towards -Z (North)
+ *   Y  = Vertical elevation (meters)
  */
 
 /**
- * @param {{lat: number, lng: number}} point - toạ độ GPS cần quy đổi
- * @param {object} config - nội dung data/map-config.json
- * @param {number} [elevation=0] - độ cao (mét), gán vào y
+ * Projects GPS coordinates onto the 3D scene grid based on map configuration.
+ * @param {{lat: number, lng: number}} point - GPS coordinate point to project
+ * @param {object} config - Map configuration loaded from data/map-config.json
+ * @param {number} [elevation=0] - Vertical height in meters
  * @returns {{x: number, y: number, z: number}}
  */
 export function gpsToScene(point, config, elevation = 0) {
@@ -25,16 +24,15 @@ export function gpsToScene(point, config, elevation = 0) {
   const deltaLatRad = toRadians(point.lat - config.origin.lat);
   const deltaLngRad = toRadians(point.lng - config.origin.lng);
 
-  // Khoảng cách theo hướng Bắc-Nam (mét): arc length = R * deltaLat
+  // North-South distance in meters: arc length = R * deltaLat
   const northMeters = R * deltaLatRad;
-  // Khoảng cách theo hướng Đông-Tây (mét): hiệu chỉnh theo cos(latitude)
-  // vì 1 độ kinh độ ở gần cực ngắn hơn 1 độ kinh độ ở xích đạo.
+  // East-West distance in meters: adjusted by cos(latitude)
   const eastMeters = R * deltaLngRad * Math.cos(originLatRad);
 
   return {
     x: eastMeters / metersPerUnit,
     y: elevation / metersPerUnit,
-    z: -northMeters / metersPerUnit // +Z = hướng Nam nên đảo dấu northMeters
+    z: -northMeters / metersPerUnit // +Z is South, negate northMeters
   };
 }
 

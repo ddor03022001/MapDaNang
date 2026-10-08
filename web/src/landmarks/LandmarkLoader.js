@@ -2,9 +2,9 @@ import { createGltfLoader } from '../utils/loaders.js';
 import { Landmark } from './Landmark.js';
 
 /**
- * LandmarkLoader: đọc data/landmarks.json và load từng model .glb tương ứng.
- * Những landmark chưa có model (model.status === "pending") sẽ bị bỏ qua
- * và chỉ log cảnh báo, để không làm vỡ app khi model chưa được dựng xong.
+ * LandmarkLoader fetches landmark metadata and loads the corresponding .glb 3D models.
+ * Landmarks whose models are still pending or unavailable are logged with warnings
+ * rather than terminating application initialization.
  */
 export class LandmarkLoader {
   constructor() {
@@ -12,9 +12,10 @@ export class LandmarkLoader {
   }
 
   /**
-   * @param {string} jsonUrl - đường dẫn tới landmarks.json
-   * @param {string} mapConfigUrl - đường dẫn tới map-config.json (quy ước scale/origin)
-   * @returns {Promise<Landmark[]>}
+   * Fetches metadata from landmarks.json and map-config.json, then loads all ready assets.
+   * @param {string} [jsonUrl] - Custom endpoint for landmarks.json
+   * @param {string} [mapConfigUrl] - Custom endpoint for map-config.json
+   * @returns {Promise<Landmark[]>} Array of successfully loaded Landmark instances
    */
   async loadAll(jsonUrl, mapConfigUrl) {
     const baseUrl = import.meta.env.BASE_URL || '/';
@@ -23,13 +24,16 @@ export class LandmarkLoader {
     const finalJsonUrl = jsonUrl || `${cleanBase}data/landmarks.json`;
     const finalMapConfigUrl = mapConfigUrl || `${cleanBase}data/map-config.json`;
 
-    const [landmarksRes, mapConfigRes] = await Promise.all([fetch(finalJsonUrl), fetch(finalMapConfigUrl)]);
+    const [landmarksRes, mapConfigRes] = await Promise.all([
+      fetch(finalJsonUrl),
+      fetch(finalMapConfigUrl)
+    ]);
 
     if (!landmarksRes.ok) {
-      throw new Error(`Không tải được metadata địa danh từ ${finalJsonUrl} (status ${landmarksRes.status})`);
+      throw new Error(`Failed to fetch landmark metadata from ${finalJsonUrl} (status: ${landmarksRes.status})`);
     }
     if (!mapConfigRes.ok) {
-      throw new Error(`Không tải được map-config từ ${finalMapConfigUrl} (status ${mapConfigRes.status})`);
+      throw new Error(`Failed to fetch map configuration from ${finalMapConfigUrl} (status: ${mapConfigRes.status})`);
     }
 
     const { landmarks } = await landmarksRes.json();
@@ -38,7 +42,7 @@ export class LandmarkLoader {
 
     for (const data of landmarks) {
       if (data.model?.status !== 'ready') {
-        console.warn(`[LandmarkLoader] Bỏ qua "${data.name}" (${data.id}): model chưa sẵn sàng (status = ${data.model?.status}).`);
+        console.warn(`[LandmarkLoader] Skipping "${data.name}" (${data.id}): model not ready (status: ${data.model?.status}).`);
         continue;
       }
 
@@ -46,13 +50,20 @@ export class LandmarkLoader {
         const landmark = await this._loadOne(data, mapConfig);
         results.push(landmark);
       } catch (err) {
-        console.error(`[LandmarkLoader] Lỗi khi load model cho "${data.name}" (${data.id}):`, err);
+        console.error(`[LandmarkLoader] Failed to load 3D model for "${data.name}" (${data.id}):`, err);
       }
     }
 
     return results;
   }
 
+  /**
+   * Loads a single GLTF asset and constructs a Landmark instance.
+   * @private
+   * @param {object} data
+   * @param {object} mapConfig
+   * @returns {Promise<Landmark>}
+   */
   _loadOne(data, mapConfig) {
     return new Promise((resolve, reject) => {
       const baseUrl = import.meta.env.BASE_URL || '/';

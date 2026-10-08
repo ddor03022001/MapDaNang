@@ -84,7 +84,7 @@
       },
       "model": {
         "path": "/models/nguhanh-son/nguhanh-son.glb",
-        "status": "pending"
+        "status": "ready"
       },
       "references": "assets/references/nguhanh-son"
     },

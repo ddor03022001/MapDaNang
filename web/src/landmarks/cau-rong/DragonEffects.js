@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 
 /**
- * DragonEffects: Tái hiện chân thực màn trình diễn Cầu Rồng Đà Nẵng
- * đối chiếu theo ảnh thực tế:
- * - Photo 2 (Fire Show): Cột lửa cuộn trào rực rỡ bắn ra từ miệng rồng, ánh lửa ấm áp soi rọi rõ đầu rồng và sông Hàn.
- * - Photo 3 (Water Show): Luồng sương nước áp lực cao trắng xóa xòe rộng đổ xuống sông Hàn, trong suốt tự nhiên, không che khuất đầu rồng.
- * - Chế độ Đêm: Hệ thống đèn LED chuyển màu mượt mà, mắt rồng hổ phách phát quang lung linh.
+ * DragonEffects: Manages special visual effects for Dragon Bridge (Cau Rong):
+ * 1. Fire Breathing Show (Volumetric fire particle column with dynamic warm point light)
+ * 2. Water Spraying Show (Pressurized mist particle system cascading into the Han River)
+ * 3. Night LED Lighting (Smooth color-shifting RGB LED animations along the dragon steel arches)
  */
 export class DragonEffects {
+  /**
+   * @param {THREE.Scene} scene - The main Three.js scene instance
+   */
   constructor(scene) {
     this.scene = scene;
     this.fireActive = false;
@@ -15,17 +17,16 @@ export class DragonEffects {
     this.isNightMode = false;
     this._modelOptimized = false;
 
-    // Tọa độ mép miệng / họng rồng trong Three.js (scale 1:100):
-    // Đầu rồng hướng bờ Đông (+X), mép miệng há ở X ≈ 2.65, Y ≈ 0.285, Z = 0.0
+    // Mouth / nozzle coordinates in Three.js space (1:100 scale):
+    // Dragon head faces East (+X), mouth opening sits at X ≈ 2.65, Y ≈ 0.285, Z = 0.0
     this.nozzlePosition = new THREE.Vector3(2.65, 0.285, 0.0);
 
-    // Ánh sáng lửa: đặt ở phía trước họng rồng trong luồng lửa (X=2.78, Y=0.36),
-    // chiếu hắt ngược lại soi rọi rõ chi tiết đầu rồng, răng nanh và mặt nước mà không bị cháy sáng
+    // Warm fire illumination point light
     this.fireLight = new THREE.PointLight(0xff6a00, 0, 3.8);
     this.fireLight.position.set(2.78, 0.36, 0.0);
     this.scene.add(this.fireLight);
 
-    // Ánh sáng dịu mát hỗ trợ luồng nước sương trắng
+    // Cool mist illumination point light
     this.waterLight = new THREE.PointLight(0xa0d0ff, 0, 3.2);
     this.waterLight.position.set(2.76, 0.33, 0.0);
     this.scene.add(this.waterLight);
@@ -35,8 +36,12 @@ export class DragonEffects {
     this._initWaterJet();
   }
 
+  /**
+   * Generates procedural radial gradient particle textures via HTML5 Canvas.
+   * @private
+   */
   _createParticleTextures() {
-    // 1. Texture đốm lửa mềm (gradient ấm áp tự nhiên, không chói lóa)
+    // 1. Soft fire ember particle texture
     const fireCanvas = document.createElement('canvas');
     fireCanvas.width = 64;
     fireCanvas.height = 64;
@@ -51,7 +56,7 @@ export class DragonEffects {
     fCtx.fillRect(0, 0, 64, 64);
     this.fireTexture = new THREE.CanvasTexture(fireCanvas);
 
-    // 2. Texture bụi nước sương mờ (mist water droplet)
+    // 2. Translucent water mist droplet particle texture
     const waterCanvas = document.createElement('canvas');
     waterCanvas.width = 64;
     waterCanvas.height = 64;
@@ -66,8 +71,11 @@ export class DragonEffects {
     this.waterTexture = new THREE.CanvasTexture(waterCanvas);
   }
 
+  /**
+   * Initializes fire particle system buffer and materials.
+   * @private
+   */
   _initFireJet() {
-    // 420 hạt lửa mô phỏng cột lửa cuồn cuộn có độ bung và tàn lửa
     this.fireCount = 420;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(this.fireCount * 3);
@@ -94,7 +102,6 @@ export class DragonEffects {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Kích thước hạt vừa phải (0.11), độ mờ vừa phải (0.55) để cột lửa rõ nét mà không làm mờ đầu rồng
     const material = new THREE.PointsMaterial({
       size: 0.11,
       map: this.fireTexture,
@@ -110,8 +117,11 @@ export class DragonEffects {
     this.scene.add(this.firePoints);
   }
 
+  /**
+   * Initializes water spray mist particle system buffer and materials.
+   * @private
+   */
   _initWaterJet() {
-    // 650 hạt nước tạo thành luồng sương khổng lồ xòe rộng đổ xuống sông Hàn
     this.waterCount = 650;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(this.waterCount * 3);
@@ -138,7 +148,6 @@ export class DragonEffects {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Dùng NormalBlending thay vì AdditiveBlending để không bị lóa trắng chói mắt
     const material = new THREE.PointsMaterial({
       size: 0.13,
       map: this.waterTexture,
@@ -154,6 +163,10 @@ export class DragonEffects {
     this.scene.add(this.waterPoints);
   }
 
+  /**
+   * Toggles fire-breathing particle emission on/off.
+   * @param {boolean} [active]
+   */
   toggleFire(active = !this.fireActive) {
     this.fireActive = active;
     this.firePoints.visible = active;
@@ -164,6 +177,10 @@ export class DragonEffects {
     }
   }
 
+  /**
+   * Toggles water-spraying particle emission on/off.
+   * @param {boolean} [active]
+   */
   toggleWater(active = !this.waterActive) {
     this.waterActive = active;
     this.waterPoints.visible = active;
@@ -174,16 +191,20 @@ export class DragonEffects {
     }
   }
 
+  /**
+   * Per-frame animation and simulation update.
+   * @param {number} delta - Frame delta time in seconds
+   * @param {number} time - Global elapsed time in seconds
+   * @param {THREE.Object3D|null} bridgeModel - Loaded Dragon Bridge 3D root object
+   */
   update(delta, time, bridgeModel) {
-    // Tinh chỉnh độ phát quang của vật liệu model Cầu Rồng khi vừa nạp xong
     if (bridgeModel && !this._modelOptimized) {
       this._optimizeModelMaterials(bridgeModel);
       this._modelOptimized = true;
     }
 
-    // 1. CẬP NHẬT MÀN PHUN LỬA
+    // 1. Update Fire Emission Simulation
     if (this.fireActive) {
-      // Ánh lửa chập chờn ấm áp soi rọi đầu rồng (dao động dịu dàng 0.85 -> 1.65)
       this.fireLight.intensity = 1.25 + Math.sin(time * 28.0) * 0.25 + Math.cos(time * 46.0) * 0.15;
 
       const pos = this.firePoints.geometry.attributes.position;
@@ -195,7 +216,6 @@ export class DragonEffects {
 
         if (this.fireLifetimes[i] >= this.fireMaxLifetimes[i]) {
           this.fireLifetimes[i] = 0;
-          // Xuất phát từ miệng rồng với độ lệch tự nhiên nhẹ
           pos.setXYZ(
             i,
             this.nozzlePosition.x + (Math.random() - 0.5) * 0.02,
@@ -203,9 +223,9 @@ export class DragonEffects {
             this.nozzlePosition.z + (Math.random() - 0.5) * 0.02
           );
 
-          // Vận tốc bắn mạnh về phía Đông (+X) ở góc nghiêng +26 đến +34 độ
+          // Eject eastwards (+X) at an elevated angle (+26 to +34 degrees)
           const speed = 2.6 + Math.random() * 2.2;
-          const pitch = mathToRad(26 + Math.random() * 8);
+          const pitch = (26 + Math.random() * 8) * (Math.PI / 180);
           const yaw = (Math.random() - 0.5) * 0.12;
 
           this.fireVelocities[i].set(
@@ -217,7 +237,6 @@ export class DragonEffects {
           const vx = this.fireVelocities[i].x;
           const vy = this.fireVelocities[i].y;
           const vz = this.fireVelocities[i].z;
-
           const lifeProgress = this.fireLifetimes[i] / this.fireMaxLifetimes[i];
 
           pos.setXYZ(
@@ -227,7 +246,7 @@ export class DragonEffects {
             pos.getZ(i) + vz * delta
           );
 
-          // Chuyển màu ngọn lửa: Vàng sáng -> Cam ấm -> Đỏ khói lụi dần
+          // Color transition: Bright yellow -> Warm orange -> Fading smoke red
           if (lifeProgress < 0.20) {
             col.setXYZ(i, 1.0, 0.85, 0.40);
           } else if (lifeProgress < 0.60) {
@@ -244,7 +263,7 @@ export class DragonEffects {
       this.fireLight.intensity = 0;
     }
 
-    // 2. CẬP NHẬT MÀN PHUN NƯỚC
+    // 2. Update Water Mist Simulation
     if (this.waterActive) {
       this.waterLight.intensity = 0.45;
 
@@ -263,9 +282,8 @@ export class DragonEffects {
             this.nozzlePosition.z + (Math.random() - 0.5) * 0.02
           );
 
-          // Phun vòi áp lực cao góc +32 độ rồi tỏa rộng sương nước
           const speed = 2.5 + Math.random() * 2.1;
-          const pitch = mathToRad(32 + Math.random() * 8);
+          const pitch = (32 + Math.random() * 8) * (Math.PI / 180);
           const yaw = (Math.random() - 0.5) * 0.30;
 
           this.waterVelocities[i].set(
@@ -274,7 +292,7 @@ export class DragonEffects {
             yaw * speed
           );
         } else {
-          // Trọng lực kéo các giọt sương rơi vòng cung xuống sông Hàn
+          // Gravity pull curving spray downwards toward river surface
           this.waterVelocities[i].y -= 2.8 * delta;
 
           pos.setXYZ(
@@ -290,16 +308,19 @@ export class DragonEffects {
       this.waterLight.intensity = 0;
     }
 
-    // 3. ĐỔI MÀU LED THÂN RỒNG BAN ĐÊM
+    // 3. Dynamic Night LED Lighting
     if (bridgeModel && this.isNightMode) {
       this._updateNightLedColors(time, bridgeModel);
     }
   }
 
+  /**
+   * Optimizes emissive materials on the loaded model.
+   * @private
+   */
   _optimizeModelMaterials(bridgeModel) {
     bridgeModel.traverse((child) => {
       if (child.isMesh && child.material) {
-        // Cân bằng phát quang mắt rồng để mắt sáng lung linh mà không bị quầng chói
         if (child.material.name.includes('dragon-eye')) {
           if (child.material.emissiveIntensity !== undefined) {
             child.material.emissiveIntensity = 1.6;
@@ -314,6 +335,11 @@ export class DragonEffects {
     });
   }
 
+  /**
+   * Sets nighttime lighting mode for the bridge.
+   * @param {boolean} isNight
+   * @param {THREE.Object3D|null} bridgeModel
+   */
   setNightMode(isNight, bridgeModel) {
     this.isNightMode = isNight;
     if (!isNight && bridgeModel) {
@@ -326,13 +352,17 @@ export class DragonEffects {
     }
   }
 
+  /**
+   * Cycles smooth RGB gradient colors across the dragon's body at night.
+   * @private
+   */
   _updateNightLedColors(time, bridgeModel) {
     const colors = [
-      new THREE.Color(0xffaa00), // Vàng kim
-      new THREE.Color(0x0088ff), // Xanh lam
-      new THREE.Color(0x00e599), // Xanh ngọc
-      new THREE.Color(0xff2222), // Đỏ rực
-      new THREE.Color(0xdd00bb), // Tím sen
+      new THREE.Color(0xffaa00), // Golden Amber
+      new THREE.Color(0x0088ff), // Sapphire Blue
+      new THREE.Color(0x00e599), // Emerald Jade
+      new THREE.Color(0xff2222), // Crimson Red
+      new THREE.Color(0xdd00bb), // Lotus Magenta
     ];
 
     const cycle = (time * 0.35) % colors.length;
@@ -353,8 +383,4 @@ export class DragonEffects {
       }
     });
   }
-}
-
-function mathToRad(deg) {
-  return (deg * Math.PI) / 180;
 }

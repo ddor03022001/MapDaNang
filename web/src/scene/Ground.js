@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import { CityEnvironment } from './CityEnvironment.js';
-import { OceanWaves } from './OceanWaves.js';
+import { OceanWaves } from '../landmarks/my-khe/OceanWaves.js';
+import { MarbleMountains } from '../landmarks/ngu-hanh-son/MarbleMountains.js';
 
 /**
- * Ground: Quản lý cảnh quan tổng thể Đà Nẵng:
- * - Dòng Sông Hàn thơ mộng chảy qua trung tâm từ Cầu Trần Thị Lý, Cầu Rồng đến Cầu Sông Hàn ra vịnh.
- * - Môi trường đô thị CityEnvironment: đường xá, bờ kè, nhà cửa, các tòa cao ốc biểu tượng (Tòa nhà Trái Bắp, Novotel, Hilton, APEC...).
- * - Bãi biển Mỹ Khê & Hệ thống sóng biển dạt dào OceanWaves.
- * - Nền địa hình mở rộng cho toàn thành phố.
+ * Ground: Coordinates Da Nang's overarching geographical landscape:
+ * - Han River water plane flowing North-South through the city center.
+ * - Urban city environment: road networks, embankments, residential blocks, iconic skyscrapers.
+ * - My Khe Beach dynamic ocean surf system.
+ * - Marble Mountains (Ngũ Hành Sơn) five elemental karst peaks.
+ * - Base regional terrain plane.
  */
 export class Ground {
   constructor() {
@@ -16,23 +18,30 @@ export class Ground {
     this._createHanRiver();
     this._createOuterTerrain();
 
-    // Môi trường đô thị, mạng lưới đường xá và các khối cao ốc hai bên sông Hàn
+    // Urban environment: streets, traffic networks, and high-rise structures on both banks
     this.cityEnvironment = new CityEnvironment();
     this.group.add(this.cityEnvironment.group);
 
-    // Hệ thống sóng biển động Biển Mỹ Khê
+    // Dynamic surf and shoreline simulation for My Khe Beach
     this.oceanWaves = new OceanWaves({ x: 20.65, y: 0.0, z: 0.0 });
     this.group.add(this.oceanWaves.group);
+
+    // Marble Mountains (Ngũ Hành Sơn) karst landscape
+    this.marbleMountains = new MarbleMountains({ x: 37.76, y: 0.0, z: 65.01 });
+    this.group.add(this.marbleMountains.group);
   }
 
+  /**
+   * Initializes Han River water geometry and animated standard material.
+   * River flows along Z axis (North - South), ~558m wide (5.58 scene units).
+   * @private
+   */
   _createHanRiver() {
-    // Sông Hàn chảy dọc trục Z (Bắc - Nam), rộng ~558m (5.58 units trong scene từ X=-2.79 đến +2.79)
-    // Chiều dài 50 units (5km) bao trọn toàn bộ đoạn sông từ phía Nam Cầu Rồng đến phía Bắc Cầu Sông Hàn
     const riverWidth = 5.58;
     const riverLength = 52.0;
     const geometry = new THREE.PlaneGeometry(riverWidth, riverLength, 64, 160);
 
-    // Lưu các vị trí ban đầu để tạo sóng lăn tăn
+    // Cache initial vertex positions for procedural wave displacement
     this.waterBasePositions = geometry.attributes.position.array.slice();
 
     this.waterMaterial = new THREE.MeshStandardMaterial({
@@ -46,13 +55,16 @@ export class Ground {
 
     this.waterMesh = new THREE.Mesh(geometry, this.waterMaterial);
     this.waterMesh.rotation.x = -Math.PI / 2;
-    this.waterMesh.position.set(0, 0.005, -7.0); // Tâm sông dịch về Z=-7.0 để cân đối Cầu Rồng (Z=0) và Cầu Sông Hàn (Z=-12.25)
+    this.waterMesh.position.set(0, 0.005, -7.0); // Offset to balance Dragon Bridge (Z=0) and Han River Bridge (Z=-12.25)
     this.waterMesh.receiveShadow = true;
     this.group.add(this.waterMesh);
   }
 
+  /**
+   * Generates the regional terrain plane covering the metropolitan perimeter.
+   * @private
+   */
   _createOuterTerrain() {
-    // Mặt nền đô thị rộng lớn bao quát toàn thành phố
     const cityGeo = new THREE.PlaneGeometry(1200, 1200);
     const cityMat = new THREE.MeshStandardMaterial({
       color: 0x2d3732,
@@ -67,34 +79,80 @@ export class Ground {
     this.group.add(cityMesh);
   }
 
-  setNightMode(isNight) {
+  /**
+   * Updates lighting and shaders across child environments for night mode.
+   * @param {boolean} isNight 
+   */
+  setNightMode(isNight, nhsModel = null) {
     if (this.cityEnvironment) {
       this.cityEnvironment.setNightMode(isNight);
     }
     if (this.oceanWaves) {
       this.oceanWaves.setNightMode(isNight);
     }
+    if (this.marbleMountains) {
+      this.marbleMountains.setNightMode(isNight, nhsModel);
+    }
   }
 
+  /**
+   * Toggles city traffic simulation on/off.
+   * @param {boolean} enabled 
+   */
+  setTrafficEnabled(enabled) {
+    if (this.cityEnvironment) {
+      this.cityEnvironment.setTrafficEnabled(enabled);
+    }
+  }
+
+  /**
+   * Adjusts coastal wave amplitude and intensity.
+   * @param {number} val 
+   */
+  setWaveIntensity(val) {
+    if (this.oceanWaves) {
+      this.oceanWaves.setWaveIntensity(val);
+    }
+  }
+
+  /**
+   * Toggles Huyen Khong Cave divine volumetric sunbeam.
+   * @param {boolean} active 
+   */
+  toggleDivineLight(active) {
+    if (this.marbleMountains) {
+      this.marbleMountains.toggleDivineLight(active);
+    }
+  }
+
+  /**
+   * Per-frame animation cycle for river surface waves, traffic, and ocean surf.
+   * @param {number} time 
+   * @param {number} delta 
+   */
   update(time, delta = 0.016) {
-    // Cập nhật hệ thống xe cộ lưu thông trên cầu và các đại lộ
+    // Update road traffic flow
     if (this.cityEnvironment) {
       this.cityEnvironment.update(time, delta);
     }
 
-    // Cập nhật hệ thống sóng biển động Biển Mỹ Khê
+    // Update My Khe ocean surf
     if (this.oceanWaves) {
       this.oceanWaves.update(time, delta);
     }
 
-    // Sóng nước lăn tăn trên sông Hàn
+    // Update Marble Mountains effects
+    if (this.marbleMountains) {
+      this.marbleMountains.update(time, delta);
+    }
+
+    // Han River undulating ripple displacement
     if (this.waterMesh) {
       const pos = this.waterMesh.geometry.attributes.position;
       const count = pos.count;
       for (let i = 0; i < count; i++) {
         const u = this.waterBasePositions[i * 3];
         const v = this.waterBasePositions[i * 3 + 1];
-        // Sóng lăn tăn nhẹ nhàng
         const wave = Math.sin(u * 5.0 + time * 1.8) * 0.007 +
                      Math.cos(v * 4.0 + time * 1.4) * 0.005;
         pos.setZ(i, wave);
@@ -103,6 +161,10 @@ export class Ground {
     }
   }
 
+  /**
+   * Adds all ground environment objects to the given Three.js scene.
+   * @param {THREE.Scene} scene 
+   */
   addTo(scene) {
     scene.add(this.group);
   }

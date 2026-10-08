@@ -1,28 +1,27 @@
 import * as THREE from 'three';
 
 /**
- * CityEnvironment: Tái hiện chân thực mạng lưới đường xá và các khối kiến trúc đô thị
- * hai bên bờ sông Hàn (Hải Châu - Bờ Tây & Sơn Trà - Bờ Đông) xung quanh Cầu Rồng
- * và Cầu Sông Hàn theo đúng tọa độ thực tế trên bản đồ Đà Nẵng:
+ * CityEnvironment: Accurately renders the urban road network and architectural blocks
+ * on both banks of the Han River (Hai Chau - West Bank & Son Tra - East Bank)
+ * surrounding Dragon Bridge and Han River Bridge according to real Da Nang coordinates:
  *
- * 1. Dốc cầu tiếp đất (Approach Ramps) CHUẨN XÁC 100%:
- *    - Cầu Rồng: Mặt dốc 6 làn xe (3 làn mỗi chiều) + dải phân cách giữa có cỏ xanh & đèn đường +
- *      vỉa hè đi bộ có lan can bảo vệ kéo dài liền mạch từ trên cầu xuống mặt đất (X = ±3.33 -> ±4.25).
- *    - Tường cánh mố cầu bê tông phẳng phiu, không có góc nhọn hay khối thừa nào chìa ra ngoài.
- *    - Cầu Sông Hàn: Mặt dốc 2 làn xe + vỉa hè + lan can tiếp đất êm thuận vào đường Lê Duẩn và Phạm Văn Đồng.
+ * 1. Approach Ramps:
+ *    - Dragon Bridge: 6-lane ramps (3 lanes each direction) + center median with green verge & lampposts +
+ *      pedestrian sidewalks with guardrails transitioning smoothly to ground level (X = ±3.33 -> ±4.25).
+ *    - Planar concrete wing walls flush with embankments.
+ *    - Han River Bridge: 2-lane ramps + pedestrian paths connecting into Le Duan and Pham Van Dong avenues.
  *
- * 2. Mạng lưới đường xá chuẩn thực địa & Hầm chui ven sông (Underpasses):
- *    - Đường Bạch Đằng (bờ Tây) & Trần Hưng Đạo (bờ Đông) chạy thông suốt dưới gầm Cầu Rồng và Cầu Sông Hàn
- *      với tĩnh không thoáng đãng (6m - 8.3m), không bị vỉa hè hay trụ cầu nào chắn ngang đường.
- *    - Đại lộ Nguyễn Văn Linh & Võ Văn Kiệt: 6 làn xe, dải phân cách cây xanh giữa đường và vỉa hè rợp bóng cây.
+ * 2. Real-world Road Network & Riverside Underpasses:
+ *    - Bach Dang St (West) & Tran Hung Dao St (East) running beneath Dragon & Han River Bridges
+ *      with realistic vertical clearance (6.0m - 8.3m).
+ *    - Nguyen Van Linh & Vo Van Kiet Avenues: 6 traffic lanes, landscaped medians, and tree-lined sidewalks.
  *
- * 3. Hệ thống xe cộ lưu thông sống động (Traffic System):
- *    - Ô tô, taxi Mai Linh (xanh lá), taxi Tiên Sa (vàng), xe buýt, xe máy di chuyển liên tục
- *      trên các làn đường của Cầu Rồng, Cầu Sông Hàn và các tuyến phố.
+ * 3. Dynamic Traffic System:
+ *    - Cars, green Mai Linh taxis, yellow Tien Sa taxis, buses, and motorbikes in continuous transit.
  *
- * 4. Các công trình biểu tượng Đà Nẵng:
- *    - Tháp Trái Bắp (Admin Center 34 tầng), Novotel (37 tầng), Hilton (28 tầng), Công viên APEC,
- *      Bảo tàng Điêu khắc Chăm, Cầu Tình Yêu & Tượng Cá Chép Hóa Rồng.
+ * 4. Iconic Da Nang City Landmarks:
+ *    - Danang Administrative Center ("Corn Tower" 34 floors), Novotel (37 floors), Hilton (28 floors),
+ *      APEC Peace Park, Cham Sculpture Museum, Love Lock Bridge, and Carp-Dragon Statue.
  */
 export class CityEnvironment {
   constructor() {
@@ -31,6 +30,7 @@ export class CityEnvironment {
     this.nightMaterials = [];
     this.signMaterials = [];
     this.vehicles = [];
+    this.trafficEnabled = true;
 
     this._initMaterials();
     this._buildBridgeRamps();
@@ -44,55 +44,55 @@ export class CityEnvironment {
   }
 
   _initMaterials() {
-    // 1. Nhựa đường Asphalt cao cấp
+    // 1. Heavy asphalt road surface
     this.asphaltMat = new THREE.MeshStandardMaterial({
       color: 0x222428,
       roughness: 0.88,
       metalness: 0.05
     });
 
-    // 2. Vạch sơn kẻ đường trắng & vàng PBR
+    // 2. Road markings (white dashed / double solid yellow)
     this.whiteStripeMat = new THREE.MeshBasicMaterial({ color: 0xf0f0f0 });
     this.yellowStripeMat = new THREE.MeshBasicMaterial({ color: 0xf5b700 });
 
-    // 3. Vỉa hè lát đá granite ghi xám
+    // 3. Granite sidewalk pavement
     this.sidewalkMat = new THREE.MeshStandardMaterial({
       color: 0xb4b9be,
       roughness: 0.78,
       metalness: 0.02
     });
 
-    // 4. Bờ kè sông & tường chắn mố cầu bê tông
+    // 4. Concrete riverbanks and retaining wing walls
     this.quayMat = new THREE.MeshStandardMaterial({
       color: 0xbec4c9,
       roughness: 0.82,
       metalness: 0.04
     });
 
-    // 5. Lan can bảo vệ kim loại ghi bạc
+    // 5. Metallic guardrails and protective barriers
     this.railingMat = new THREE.MeshStandardMaterial({
       color: 0x76828d,
       metalness: 0.8,
       roughness: 0.35
     });
 
-    // 6. Thảm cỏ công viên & dải phân cách xanh
+    // 6. Grass verges and park landscaping
     this.grassMat = new THREE.MeshStandardMaterial({
       color: 0x2e6535,
       roughness: 0.9,
       metalness: 0.0
     });
 
-    // 7. Vật liệu tường nhà đô thị phong phú
+    // 7. Urban facade materials
     this.facadeMats = [
-      new THREE.MeshStandardMaterial({ color: 0xeeece6, roughness: 0.65 }), // Trắng kem
-      new THREE.MeshStandardMaterial({ color: 0xe5d8be, roughness: 0.7 }),  // Vàng cát pastel
-      new THREE.MeshStandardMaterial({ color: 0xd9dfe5, roughness: 0.6 }),  // Xám xanh hiện đại
-      new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.72 }), // Be ấm
-      new THREE.MeshStandardMaterial({ color: 0xb5c6d3, roughness: 0.55 }), // Lam nhạt
+      new THREE.MeshStandardMaterial({ color: 0xeeece6, roughness: 0.65 }), // Cream white
+      new THREE.MeshStandardMaterial({ color: 0xe5d8be, roughness: 0.7 }),  // Pastel sand
+      new THREE.MeshStandardMaterial({ color: 0xd9dfe5, roughness: 0.6 }),  // Modern cool gray
+      new THREE.MeshStandardMaterial({ color: 0xdfd3c3, roughness: 0.72 }), // Warm beige
+      new THREE.MeshStandardMaterial({ color: 0xb5c6d3, roughness: 0.55 }), // Soft slate blue
     ];
 
-    // 8. Kính cao ốc phản chiếu
+    // 8. Reflective skyscraper architectural glass
     this.glassMat = new THREE.MeshPhysicalMaterial({
       color: 0x245874,
       roughness: 0.1,
@@ -102,7 +102,7 @@ export class CityEnvironment {
       reflectivity: 0.9
     });
 
-    // 9. Kính xanh tháp Trái Bắp (Danang Admin Center)
+    // 9. Corn Tower blue glass (Danang Administrative Center)
     this.adminGlassMat = new THREE.MeshPhysicalMaterial({
       color: 0x1b708b,
       roughness: 0.08,
@@ -111,7 +111,7 @@ export class CityEnvironment {
       ior: 1.55
     });
 
-    // 10. Cửa sổ nhà phát sáng ban đêm
+    // 10. Night illuminated windows
     this.windowGlowMat = new THREE.MeshStandardMaterial({
       color: 0x334455,
       roughness: 0.4,
@@ -120,7 +120,7 @@ export class CityEnvironment {
     });
     this.nightMaterials.push(this.windowGlowMat);
 
-    // 11. Đèn xe & đèn đường ban đêm
+    // 11. Night vehicle headlights & streetlights
     this.headlightMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: new THREE.Color(0xfff5d0),
@@ -134,29 +134,29 @@ export class CityEnvironment {
     this.nightMaterials.push(this.headlightMat);
     this.nightMaterials.push(this.taillightMat);
 
-    // 12. Màu xe cộ giao thông
+    // 12. Vehicle body paint colors
     this.carColors = [
-      new THREE.MeshStandardMaterial({ color: 0xededed, roughness: 0.35, metalness: 0.6 }), // Trắng ngọc
-      new THREE.MeshStandardMaterial({ color: 0x1f2326, roughness: 0.35, metalness: 0.7 }), // Đen sang trọng
-      new THREE.MeshStandardMaterial({ color: 0x257038, roughness: 0.4, metalness: 0.4 }),  // Taxi Mai Linh (Xanh lá)
-      new THREE.MeshStandardMaterial({ color: 0xe5a312, roughness: 0.35, metalness: 0.5 }), // Taxi Tiên Sa (Vàng)
-      new THREE.MeshStandardMaterial({ color: 0xb52222, roughness: 0.35, metalness: 0.6 }), // Đỏ tươi
-      new THREE.MeshStandardMaterial({ color: 0x225599, roughness: 0.35, metalness: 0.6 }), // Xanh dương
-      new THREE.MeshStandardMaterial({ color: 0x828890, roughness: 0.3, metalness: 0.7 }),  // Bạc ánh kim
+      new THREE.MeshStandardMaterial({ color: 0xededed, roughness: 0.35, metalness: 0.6 }), // Pearl white
+      new THREE.MeshStandardMaterial({ color: 0x1f2326, roughness: 0.35, metalness: 0.7 }), // Luxury obsidian black
+      new THREE.MeshStandardMaterial({ color: 0x257038, roughness: 0.4, metalness: 0.4 }),  // Mai Linh Taxi (Green)
+      new THREE.MeshStandardMaterial({ color: 0xe5a312, roughness: 0.35, metalness: 0.5 }), // Tien Sa Taxi (Yellow)
+      new THREE.MeshStandardMaterial({ color: 0xb52222, roughness: 0.35, metalness: 0.6 }), // Crimson red
+      new THREE.MeshStandardMaterial({ color: 0x225599, roughness: 0.35, metalness: 0.6 }), // Cobalt blue
+      new THREE.MeshStandardMaterial({ color: 0x828890, roughness: 0.3, metalness: 0.7 }),  // Metallic silver
     ];
 
-    // 13. Mái ngói Chăm & công trình cổ
+    // 13. Cham terracotta roof tile material
     this.tileMat = new THREE.MeshStandardMaterial({
       color: 0xb84a2d,
       roughness: 0.8,
       metalness: 0.05
     });
 
-    // 14. Cây cối
+    // 14. Foliage & vegetation
     this.foliageMat = new THREE.MeshStandardMaterial({ color: 0x24622b, roughness: 0.85 });
     this.trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3728, roughness: 0.9 });
 
-    // 15. Kết cấu thép giá long môn & cột biển báo
+    // 15. Structural steel for overhead gantries & sign posts
     this.gantrySteelMat = new THREE.MeshStandardMaterial({
       color: 0x8a99a8,
       metalness: 0.85,
@@ -165,32 +165,32 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 1. DỐC CẦU TIẾP ĐẤT 3D CHUẨN XÁC 100% (APPROACH RAMPS)
+  // 1. ACCURATE 3D APPROACH RAMPS
   // -------------------------------------------------------------------------
   _buildBridgeRamps() {
     const rampsGroup = new THREE.Group();
 
     // =========================================================================
-    // A. DỐC CẦU RỒNG TIẾP ĐẤT (BỜ TÂY & BỜ ĐÔNG)
-    // - Cao độ mặt cầu: Y = 0.095 (9.5m) tại X = ±3.33
-    // - Cao độ mặt đất đại lộ: Y = 0.012 tại X = ±4.25
-    // - Mặt cắt ngang:
-    //   + Dải phân cách giữa: Z = -0.018 đến +0.018 (rộng 3.6m), có bồn cỏ xanh & đèn đường
-    //   + Làn xe Nam (3 làn): Z = -0.152 đến -0.018 (rộng 13.4m)
-    //   + Làn xe Bắc (3 làn): Z = +0.018 đến +0.152 (rộng 13.4m)
-    //   + Vỉa hè đi bộ 2 bên: Z = ±0.152 đến ±0.1845 (rộng 3.25m), lát đá + lan can bảo vệ
-    //   + Tường cánh mố bê tông đứng: tại Z = ±0.1845 phẳng phiu từ vỉa hè xuống Y = 0.0
+    // A. DRAGON BRIDGE APPROACH RAMPS (WEST & EAST BANKS)
+    // - Bridge deck elevation: Y = 0.095 at X = ±3.33
+    // - Ground boulevard elevation: Y = 0.012 at X = ±4.25
+    // - Cross-section configuration:
+    //   + Center median: Z = -0.018 to +0.018, landscaped with grass & streetlamps
+    //   + Southbound roadway (3 lanes): Z = -0.152 to -0.018
+    //   + Northbound roadway (3 lanes): Z = +0.018 to +0.152
+    //   + Sidewalks (both sides): Z = ±0.152 to ±0.1845, paved stone with guardrails
+    //   + Concrete wing walls: vertical at Z = ±0.1845 flush down to Y = 0.0
     // =========================================================================
     const buildCauRongRamp = (signX) => {
-      const xB = signX * 3.33; // Đầu cầu
-      const xG = signX * 4.25; // Chân dốc
+      const xB = signX * 3.33; // Bridge threshold
+      const xG = signX * 4.25; // Ramp foot at ground level
       const yB = 0.095;
       const yG = 0.012;
 
-      // 1. Hai mặt đường dốc asphalt (Nam & Bắc)
+      // 1. Dual asphalt ramp decks (Southbound & Northbound)
       const carriageways = [
-        { z1: -0.152, z2: -0.018 }, // Chiều Nam (3 làn)
-        { z1:  0.018, z2:  0.152 }, // Chiều Bắc (3 làn)
+        { z1: -0.152, z2: -0.018 }, // Southbound carriageway (3 lanes)
+        { z1:  0.018, z2:  0.152 }, // Northbound carriageway (3 lanes)
       ];
 
       carriageways.forEach(cw => {
@@ -205,7 +205,7 @@ export class CityEnvironment {
         roadMesh.receiveShadow = true;
         rampsGroup.add(roadMesh);
 
-        // Vạch sơn kẻ đường đứt đoạn (2 vạch chia 3 làn xe cho mỗi chiều)
+        // Dashed lane divider lines (2 markings dividing 3 lanes per direction)
         const laneW = (cw.z2 - cw.z1) / 3.0;
         for (let l = 1; l <= 2; l++) {
           const zLine = cw.z1 + l * laneW;
@@ -232,9 +232,9 @@ export class CityEnvironment {
         }
       });
 
-      // 2. Dải phân cách cây xanh giữa dốc (Median Strip)
+      // 2. Green median strip along ramp
       const medGeo = new THREE.BufferGeometry();
-      const medH = 0.0035; // Gờ cao hơn mặt đường 3.5mm (35cm thực tế)
+      const medH = 0.0035; // Elevated 35cm in real-world scale
       const medVerts = new Float32Array([
         xB, yB + medH, -0.018,   xB, yB + medH,  0.018,   xG, yG + medH, -0.018,
         xB, yB + medH,  0.018,   xG, yG + medH,  0.018,   xG, yG + medH, -0.018
@@ -244,7 +244,7 @@ export class CityEnvironment {
       const medMesh = new THREE.Mesh(medGeo, this.grassMat);
       rampsGroup.add(medMesh);
 
-      // Gờ bó vỉa bê tông dải phân cách
+      // Concrete curb borders for center median
       for (const zSide of [-0.018, 0.018]) {
         const curbGeo = new THREE.BufferGeometry();
         const cVerts = new Float32Array([
@@ -256,7 +256,7 @@ export class CityEnvironment {
         rampsGroup.add(new THREE.Mesh(curbGeo, this.quayMat));
       }
 
-      // 3. Vỉa hè đi bộ 2 bên dốc cầu (Sidewalks)
+      // 3. Pedestrian sidewalks flanking the ramps
       const swH = 0.0035;
       const swSides = [
         { zIn: -0.152, zOut: -0.1845 },
@@ -275,7 +275,7 @@ export class CityEnvironment {
         swMesh.receiveShadow = true;
         rampsGroup.add(swMesh);
 
-        // Gờ bó vỉa phía lòng đường
+        // Curbs bordering the roadway
         const curbGeo = new THREE.BufferGeometry();
         const cVerts = new Float32Array([
           xB, yB, sw.zIn,   xB, yB + swH, sw.zIn,   xG, yG, sw.zIn,
@@ -285,8 +285,8 @@ export class CityEnvironment {
         curbGeo.computeVertexNormals();
         rampsGroup.add(new THREE.Mesh(curbGeo, this.quayMat));
 
-        // Lan can bảo vệ kim loại chạy dọc theo dốc
-        const railTopH = 0.0125; // Cao 1.25m từ mặt vỉa hè
+        // Metal guardrail running along the approach slope
+        const railTopH = 0.0125; // 1.25m height from sidewalk surface
         const railGeo = new THREE.BufferGeometry();
         const rVerts = new Float32Array([
           xB, yB + swH + railTopH - 0.001, sw.zOut,   xB, yB + swH + railTopH + 0.001, sw.zOut,   xG, yG + swH + railTopH - 0.001, sw.zOut,
@@ -296,7 +296,7 @@ export class CityEnvironment {
         railGeo.computeVertexNormals();
         rampsGroup.add(new THREE.Mesh(railGeo, this.railingMat));
 
-        // Các cột trụ lan can dốc
+        // Vertical guardrail stanchions
         const numPosts = 10;
         for (let p = 0; p <= numPosts; p++) {
           const t = p / numPosts;
@@ -309,8 +309,8 @@ export class CityEnvironment {
         }
       });
 
-      // 4. Tường cánh mố cầu bê tông phẳng đứng hai bên sườn dốc (Retaining Walls)
-      // Nằm chuẩn chỉ tại z = ±0.1845, phẳng đứng từ vỉa hè xuống Y = 0.0, KHÔNG nhô ra ngoài!
+      // 4. Planar vertical concrete retaining wing walls
+      // Aligned at z = ±0.1845, flush down to ground level Y = 0.0
       for (const signZ of [-1.0, 1.0]) {
         const wallZ = signZ * 0.1845;
         const wallGeo = new THREE.BufferGeometry();
@@ -326,7 +326,7 @@ export class CityEnvironment {
         rampsGroup.add(wallMesh);
       }
 
-      // 5. Tường chặn đầu mố cầu (Abutment Portal) tại x = xB bịt kín mặt đứng dưới gầm dốc
+      // 5. Abutment portal wall closing the under-ramp elevation
       const portalGeo = new THREE.BufferGeometry();
       const pVerts = new Float32Array([
         xB, 0.0, -0.1845,   xB, yB, -0.1845,   xB, 0.0, 0.1845,
@@ -339,15 +339,15 @@ export class CityEnvironment {
       rampsGroup.add(portalMesh);
     };
 
-    // Dựng 2 dốc cầu Rồng tiếp đất (Bờ Đông Sơn Trà & Bờ Tây Hải Châu)
-    buildCauRongRamp(1.0);  // Bờ Đông: X = 3.33 -> 4.25 (Võ Văn Kiệt)
-    buildCauRongRamp(-1.0); // Bờ Tây: X = -3.33 -> -4.25 (Nguyễn Văn Linh)
+    // Construct both Dragon Bridge ramps (East Bank Son Tra & West Bank Hai Chau)
+    buildCauRongRamp(1.0);  // East Bank: X = 3.33 -> 4.25 (Vo Van Kiet Ave)
+    buildCauRongRamp(-1.0); // West Bank: X = -3.33 -> -4.25 (Nguyen Van Linh Ave)
 
     // =========================================================================
-    // B. DỐC CẦU SÔNG HÀN TIẾP ĐẤT (BỜ TÂY & BỜ ĐÔNG)
-    // - Cao độ mặt cầu: Y = 0.072 tại X = ±3.15, Z = -12.25
-    // - Cao độ tiếp đất: Y = 0.012 tại X = ±3.95
-    // - Chiều rộng: 12.9m (lòng đường 8.5m: Z = -12.25 ± 0.0425, vỉa hè 2 bên 2.2m: Z = -12.25 ± 0.0645)
+    // B. HAN RIVER BRIDGE APPROACH RAMPS (WEST & EAST BANKS)
+    // - Han River Bridge deck elevation: Y = 0.072 at X = ±3.15, Z = -12.25
+    // - Ground approach elevation: Y = 0.012 at X = ±3.95
+    // - Width: 12.9m total (8.5m carriageway, 2.2m sidewalks each side)
     // =========================================================================
     const buildCauSongHanRamp = (signX) => {
       const xB = signX * 3.15;
@@ -359,7 +359,7 @@ export class CityEnvironment {
       const totalHalfW = 0.0645;
       const swH = 0.003;
 
-      // 1. Mặt đường dốc asphalt
+      // 1. Asphalt ramp roadway deck
       const rGeo = new THREE.BufferGeometry();
       const rVerts = new Float32Array([
         xB, yB, zCen - roadHalfW,   xB, yB, zCen + roadHalfW,   xG, yG, zCen - roadHalfW,
@@ -371,7 +371,7 @@ export class CityEnvironment {
       rMesh.receiveShadow = true;
       rampsGroup.add(rMesh);
 
-      // Vạch tim đường vàng đôi
+      // Double solid yellow centerline
       const stGeo = new THREE.BufferGeometry();
       const stW = 0.002;
       const stVerts = new Float32Array([
@@ -382,7 +382,7 @@ export class CityEnvironment {
       stGeo.computeVertexNormals();
       rampsGroup.add(new THREE.Mesh(stGeo, this.yellowStripeMat));
 
-      // 2. Vỉa hè đi bộ 2 bên dốc
+      // 2. Pedestrian sidewalks flanking ramp
       for (const signZ of [-1.0, 1.0]) {
         const z1 = zCen + signZ * roadHalfW;
         const z2 = zCen + signZ * totalHalfW;
@@ -395,7 +395,7 @@ export class CityEnvironment {
         swGeo.computeVertexNormals();
         rampsGroup.add(new THREE.Mesh(swGeo, this.sidewalkMat));
 
-        // Lan can dốc
+        // Ramp guardrails
         const railTopH = 0.011;
         const railGeo = new THREE.BufferGeometry();
         const rVerts = new Float32Array([
@@ -406,7 +406,7 @@ export class CityEnvironment {
         railGeo.computeVertexNormals();
         rampsGroup.add(new THREE.Mesh(railGeo, this.railingMat));
 
-        // Tường cánh bê tông
+        // Concrete wing walls
         const wallGeo = new THREE.BufferGeometry();
         const wVerts = new Float32Array([
           xB, yB + swH, z2,   xB, 0.0, z2,   xG, yG + swH, z2,
@@ -417,7 +417,7 @@ export class CityEnvironment {
         rampsGroup.add(new THREE.Mesh(wallGeo, this.quayMat));
       }
 
-      // Tường chắn mố cầu
+      // Abutment retaining wall
       const portGeo = new THREE.BufferGeometry();
       const pVerts = new Float32Array([
         xB, 0.0, zCen - totalHalfW,   xB, yB, zCen - totalHalfW,   xB, 0.0, zCen + totalHalfW,
@@ -428,19 +428,19 @@ export class CityEnvironment {
       rampsGroup.add(new THREE.Mesh(portGeo, this.quayMat));
     };
 
-    buildCauSongHanRamp(1.0);  // Bờ Đông: X = 3.15 -> 3.95 (Phạm Văn Đồng)
-    buildCauSongHanRamp(-1.0); // Bờ Tây: X = -3.15 -> -3.95 (Lê Duẩn)
+    buildCauSongHanRamp(1.0);  // East Bank: X = 3.15 -> 3.95 (Pham Van Dong Ave)
+    buildCauSongHanRamp(-1.0); // West Bank: X = -3.15 -> -3.95 (Le Duan Ave)
 
     this.group.add(rampsGroup);
   }
 
   // -------------------------------------------------------------------------
-  // 2. MẠNG LƯỚI ĐƯỜNG XÁ CHUẨN THỰC ĐỊA & HẦM CHUI VEN SÔNG
+  // 2. URBAN ROAD NETWORK & RIVERSIDE UNDERPASSES
   // -------------------------------------------------------------------------
   _buildRoadNetwork() {
     const roadsGroup = new THREE.Group();
 
-    // Helper tạo đoạn đường phẳng
+    // Helper to create planar asphalt road segment
     const addRoad = (x, z, w, len, isH = false) => {
       const geo = new THREE.PlaneGeometry(isH ? len : w, isH ? w : len);
       const mesh = new THREE.Mesh(geo, this.asphaltMat);
@@ -450,7 +450,7 @@ export class CityEnvironment {
       roadsGroup.add(mesh);
     };
 
-    // Helper tạo vạch kẻ đường
+    // Helper to create road surface markings
     const addStripe = (x, z, len, isYellow = false, isH = false) => {
       const geo = new THREE.PlaneGeometry(isH ? len : 0.003, isH ? 0.003 : len);
       const mesh = new THREE.Mesh(geo, isYellow ? this.yellowStripeMat : this.whiteStripeMat);
@@ -459,24 +459,24 @@ export class CityEnvironment {
       roadsGroup.add(mesh);
     };
 
-    // Helper tạo đại lộ 6 làn xe tiếp nối trực tiếp từ dốc Cầu Rồng (Nguyễn Văn Linh / Võ Văn Kiệt)
+    // Helper to create 6-lane boulevard connected to Dragon Bridge ramps (Nguyen Van Linh / Vo Van Kiet)
     const build6LaneAvenue = (xStart, xEnd, isWest = false) => {
       const len = Math.abs(xEnd - xStart);
       const xCen = (xStart + xEnd) / 2.0;
 
-      // 1. Hai làn xe chạy (Nam & Bắc)
-      // Nam: Z = -0.152 đến -0.018 (rộng 0.134)
+      // 1. Dual carriageways (Southbound & Northbound)
+      // Southbound: Z = -0.152 to -0.018 (width 0.134)
       addRoad(xCen, -0.085, 0.134, len, true);
-      // Bắc: Z = +0.018 đến +0.152 (rộng 0.134)
+      // Northbound: Z = +0.018 to +0.152 (width 0.134)
       addRoad(xCen,  0.085, 0.134, len, true);
 
-      // 2. Vạch sơn kẻ đường đứt đoạn chia 3 làn xe mỗi chiều
+      // 2. Dashed lane divider lines for 3 lanes per direction
       for (const zLine of [-0.129, -0.085, -0.041, 0.041, 0.085, 0.129]) {
         addStripe(xCen, zLine, len, false, true);
       }
 
-      // 3. Dải phân cách giữa có cỏ xanh và đèn đường (Z = -0.018 đến +0.018)
-      // Dải phân cách lùi lại 0.35m trước nút giao ngã ba để giao thông thông suốt, không chắn đường rẽ
+      // 3. Center median with landscaped grass & streetlights
+      // Median set back 0.35m before intersection for clear turning paths
       const medStart = isWest ? (xEnd + 0.3) : xStart;
       const medEnd = isWest ? xStart : (xEnd - 0.35);
       const medLen = Math.abs(medEnd - medStart);
@@ -487,7 +487,7 @@ export class CityEnvironment {
       medMesh.position.set(medCen, 0.014, 0.0);
       roadsGroup.add(medMesh);
 
-      // Cột đèn trên dải phân cách giữa đại lộ (dừng trước ngã ba, không cắm giữa đường)
+      // Median street lamp posts (stopped before intersections)
       const numLights = Math.floor(medLen / 1.6);
       for (let i = 0; i <= numLights; i++) {
         const xl = isWest
@@ -504,7 +504,7 @@ export class CityEnvironment {
         roadsGroup.add(arm);
       }
 
-      // 4. Vỉa hè đi bộ 2 bên đại lộ
+      // 4. Pedestrian sidewalks flanking the boulevard
       const swLen = isWest ? len : Math.max(0.1, len - 0.12);
       const swCen = isWest ? xCen : (xStart + swLen / 2.0);
       for (const signZ of [-1.0, 1.0]) {
@@ -516,31 +516,31 @@ export class CityEnvironment {
       }
     };
 
-    // A. ĐẠI LỘ NGUYỄN VĂN LINH (BỜ TÂY): Bắt đầu chuẩn xác từ chân dốc Cầu Rồng (X = -4.25 đến -20.0)
+    // A. NGUYEN VAN LINH BOULEVARD (WEST BANK): Originates from Dragon Bridge ramp foot (X = -4.25 to -20.0)
     build6LaneAvenue(-4.25, -20.0, true);
 
-    // B. ĐẠI LỘ VÕ VĂN KIỆT (BỜ ĐÔNG): Bắt đầu từ chân dốc Cầu Rồng nối THẲNG RA BIỂN MỸ KHÊ
-    // Nối chuẩn xác vào mép Tây đường Võ Nguyên Giáp tại X = 20.02
+    // B. VO VAN KIET BOULEVARD (EAST BANK): Connects Dragon Bridge directly to My Khe Beach
+    // Seamless junction at West edge of Vo Nguyen Giap St at X = 20.02
     build6LaneAvenue(4.25, 20.02, false);
 
-    // C. ĐƯỜNG LÊ DUẨN (BỜ TÂY): Bắt đầu từ chân dốc Cầu Sông Hàn (X = -3.95 đến -20.0, Z = -12.25)
+    // C. LE DUAN AVENUE (WEST BANK): Connects Han River Bridge ramp westward (X = -3.95 to -20.0, Z = -12.25)
     addRoad(-11.975, -12.25, 0.22, 16.05, true);
     addStripe(-11.975, -12.25, 16.05, true, true);
     addStripe(-11.975, -12.25 - 0.05, 16.05, false, true);
     addStripe(-11.975, -12.25 + 0.05, 16.05, false, true);
 
-    // D. ĐẠI LỘ PHẠM VĂN ĐỒNG (BỜ ĐÔNG): Bắt đầu từ Cầu Sông Hàn nối thẳng ra CÔNG VIÊN BIỂN ĐÔNG (X = +3.95 đến +20.02, Z = -12.25)
+    // D. PHAM VAN DONG BOULEVARD (EAST BANK): Connects Han River Bridge directly to East Sea Park (X = +3.95 to +20.02, Z = -12.25)
     const pvdLen = 20.02 - 3.95;
     const pvdXCen = (3.95 + 20.02) / 2.0;
-    // 2 chiều đường xe chạy (Bắc & Nam)
+    // Dual-direction carriageways (North & South)
     addRoad(pvdXCen, -12.25 - 0.06, 0.11, pvdLen, true);
     addRoad(pvdXCen, -12.25 + 0.06, 0.11, pvdLen, true);
-    // Vạch kẻ phân làn
+    // Lane divider markings
     addStripe(pvdXCen, -12.25 - 0.095, pvdLen, false, true);
     addStripe(pvdXCen, -12.25 - 0.025, pvdLen, false, true);
     addStripe(pvdXCen, -12.25 + 0.025, pvdLen, false, true);
     addStripe(pvdXCen, -12.25 + 0.095, pvdLen, false, true);
-    // Dải phân cách giữa có hoa cỏ & đèn đường
+    // Center median with greenery and streetlights
     const pvdMedLen = pvdLen - 0.35;
     const pvdMedCen = 3.95 + pvdMedLen / 2.0;
     const pvdMedGeo = new THREE.BoxGeometry(pvdMedLen, 0.005, 0.024);
@@ -559,7 +559,7 @@ export class CityEnvironment {
       arm.position.set(xl, 0.098, -12.25);
       roadsGroup.add(arm);
     }
-    // Vỉa hè đi bộ 2 bên Phạm Văn Đồng (lùi trước ngã ba 0.10m để thông suốt)
+    // Pedestrian sidewalks flanking Pham Van Dong (set back 0.10m before junctions)
     const pvdSwLen = pvdLen - 0.10;
     const pvdSwCen = 3.95 + pvdSwLen / 2.0;
     for (const signZ of [-1.0, 1.0]) {
@@ -570,18 +570,18 @@ export class CityEnvironment {
       roadsGroup.add(swMesh);
     }
 
-    // E. ĐƯỜNG VEN BIỂN VÕ NGUYÊN GIÁP: Tuyến đại lộ ven biển dài 2.4km (Z = -16.0 đến +8.0 tại X = 20.15)
-    // Nối Công viên Biển Đông, Bãi tắm Phạm Văn Đồng, Bãi tắm Mỹ Khê, Bãi tắm T20 và Phố du lịch An Thượng
+    // E. VO NGUYEN GIAP COASTAL BLVD: 2.4km beach corridor (Z = -16.0 to +8.0 at X = 20.15)
+    // Connects East Sea Park, Pham Van Dong Beach, My Khe Beach, T20 Beach, and An Thuong Tourist Quarter
     const vngLen = 24.0;
     const vngZCen = -4.0;
     addRoad(20.15, vngZCen, 0.26, vngLen, false);
-    // Vạch tim đường đôi màu vàng
+    // Double solid yellow centerline
     addStripe(20.15 - 0.002, vngZCen, vngLen, true, false);
     addStripe(20.15 + 0.002, vngZCen, vngLen, true, false);
-    // Vạch phân làn trắng
+    // White lane dividers
     addStripe(20.08, vngZCen, vngLen, false, false);
     addStripe(20.22, vngZCen, vngLen, false, false);
-    // Vỉa hè phía Tây (phân đoạn ngắt quãng tại các giao lộ để đường thông thoáng, không chắn lối đi xe)
+    // West sidewalk (segmented at intersections to preserve unobstructed vehicular turns)
     const addVngWestSwSegment = (zFrom, zTo) => {
       const sLen = Math.abs(zTo - zFrom);
       const sCen = (zFrom + zTo) / 2.0;
@@ -589,15 +589,15 @@ export class CityEnvironment {
       sw.position.set(19.98, 0.015, sCen);
       roadsGroup.add(sw);
     };
-    addVngWestSwSegment(-16.0, -12.44); // Bắc Phạm Văn Đồng
-    addVngWestSwSegment(-12.06, -8.62); // Giữa Phạm Văn Đồng & Dương Đình Nghệ
-    addVngWestSwSegment(-8.38, -4.62);  // Giữa Dương Đình Nghệ & Nguyễn Công Trứ
-    addVngWestSwSegment(-4.38, -0.20);  // Giữa Nguyễn Công Trứ & Võ Văn Kiệt
-    addVngWestSwSegment(0.20, 1.70);    // Giữa Võ Văn Kiệt & An Thượng 1
-    addVngWestSwSegment(1.90, 3.10);    // Giữa An Thượng 1 & An Thượng 2
-    addVngWestSwSegment(3.30, 4.70);    // Giữa An Thượng 2 & An Thượng 3
-    addVngWestSwSegment(4.90, 8.0);     // Nam An Thượng 3
-    // Phố đi bộ ven biển phía Đông (Seaside Promenade hướng biển Mỹ Khê)
+    addVngWestSwSegment(-16.0, -12.44); // North of Pham Van Dong Blvd
+    addVngWestSwSegment(-12.06, -8.62); // Between Pham Van Dong & Duong Dinh Nghe
+    addVngWestSwSegment(-8.38, -4.62);  // Between Duong Dinh Nghe & Nguyen Cong Tru
+    addVngWestSwSegment(-4.38, -0.20);  // Between Nguyen Cong Tru & Vo Van Kiet
+    addVngWestSwSegment(0.20, 1.70);    // Between Vo Van Kiet & An Thuong 1
+    addVngWestSwSegment(1.90, 3.10);    // Between An Thuong 1 & An Thuong 2
+    addVngWestSwSegment(3.30, 4.70);    // Between An Thuong 2 & An Thuong 3
+    addVngWestSwSegment(4.90, 8.0);     // South of An Thuong 3
+    // East seaside promenade facing My Khe Beach surf
     const vngEastSw = new THREE.Mesh(
       new THREE.BoxGeometry(0.14, 0.006, vngLen),
       this.sidewalkMat
@@ -605,7 +605,39 @@ export class CityEnvironment {
     vngEastSw.position.set(20.34, 0.015, vngZCen);
     roadsGroup.add(vngEastSw);
 
-    // F. ĐƯỜNG HỒ NGHINH: Trục du lịch ẩm thực & khách sạn trung tâm Sơn Trà (X = 14.20, Z = -13.0 đến +0.5)
+    // E2. TRUONG SA COASTAL BLVD: Scenic coastal highway connecting My Khe south to Marble Mountains
+    // Smooth curve from X = 20.15, Z = 8.0 down to X = 35.5, Z = 64.0
+    const tsSegments = 20;
+    for (let s = 0; s < tsSegments; s++) {
+      const u0 = s / tsSegments;
+      const u1 = (s + 1) / tsSegments;
+      const z0 = 8.0 + u0 * 56.0;
+      const z1 = 8.0 + u1 * 56.0;
+      const x0 = 20.15 + (35.5 - 20.15) * Math.sin(u0 * Math.PI * 0.5);
+      const x1 = 20.15 + (35.5 - 20.15) * Math.sin(u1 * Math.PI * 0.5);
+
+      const dx = x1 - x0;
+      const dz = z1 - z0;
+      const sLen = Math.sqrt(dx * dx + dz * dz);
+      const angle = Math.atan2(dx, dz);
+      const midX = (x0 + x1) * 0.5;
+      const midZ = (z0 + z1) * 0.5;
+
+      const segRoad = new THREE.Mesh(new THREE.PlaneGeometry(0.24, sLen), this.asphaltMat);
+      segRoad.rotation.x = -Math.PI / 2;
+      segRoad.rotation.z = -angle;
+      segRoad.position.set(midX, 0.003, midZ);
+      segRoad.receiveShadow = true;
+      roadsGroup.add(segRoad);
+
+      const segStripe = new THREE.Mesh(new THREE.PlaneGeometry(0.005, sLen), this.yellowStripeMat);
+      segStripe.rotation.x = -Math.PI / 2;
+      segStripe.rotation.z = -angle;
+      segStripe.position.set(midX, 0.004, midZ);
+      roadsGroup.add(segStripe);
+    }
+
+    // F. HO NGHINH ST: Hotel & culinary tourist avenue (X = 14.20, Z = -13.0 to +0.5)
     const hnLen = 13.5;
     const hnZCen = -6.25;
     addRoad(14.20, hnZCen, 0.18, hnLen, false);
@@ -619,7 +651,7 @@ export class CityEnvironment {
       roadsGroup.add(swMesh);
     }
 
-    // G. ĐƯỜNG NGUYỄN CÔNG TRỨ: Trục ngang Sơn Trà kết nối Ngô Quyền ra biển (Z = -4.50, X = 5.80 đến 20.15)
+    // G. NGUYEN CONG TRU ST: Cross connector connecting Ngo Quyen to the beach (Z = -4.50, X = 5.80 to 20.15)
     const nctLen = 20.15 - 5.80;
     const nctXCen = (5.80 + 20.15) / 2.0;
     addRoad(nctXCen, -4.50, 0.16, nctLen, true);
@@ -631,7 +663,7 @@ export class CityEnvironment {
       roadsGroup.add(swMesh);
     }
 
-    // H. ĐƯỜNG DƯƠNG ĐÌNH NGHỆ: Trục ngang Sơn Trà nối Ngô Quyền ra biển (Z = -8.50, X = 5.80 đến 20.15)
+    // H. DUONG DINH NGHE ST: Cross connector connecting Ngo Quyen to the beach (Z = -8.50, X = 5.80 to 20.15)
     addRoad(nctXCen, -8.50, 0.16, nctLen, true);
     addStripe(nctXCen, -8.50, nctLen, true, true);
     for (const signZ of [-1.0, 1.0]) {
@@ -641,56 +673,56 @@ export class CityEnvironment {
       roadsGroup.add(swMesh);
     }
 
-    // I. KHU PHỐ DU LỊCH AN THƯỢNG & ĐƯỜNG TRẦN BẠCH ĐẰNG (X = 18.20, Z = -1.5 đến +6.5)
+    // I. AN THUONG TOURIST QUARTER & TRAN BACH DANG ST (X = 18.20, Z = -1.5 to +6.5)
     const atLen = 8.0;
     const atZCen = 2.5;
     addRoad(18.20, atZCen, 0.16, atLen, false);
     addStripe(18.20, atZCen, atLen, true, false);
-    // Các phố đi bộ An Thượng 1, 2, 3 nối ra đường Võ Nguyên Giáp
+    // An Thuong 1, 2, 3 pedestrian streets connecting to Vo Nguyen Giap Blvd
     for (const atZ of [1.8, 3.2, 4.8]) {
       const walkLen = 20.15 - 17.2;
       const walkXCen = (17.2 + 20.15) / 2.0;
       addRoad(walkXCen, atZ, 0.12, walkLen, true);
     }
 
-    // J. ĐƯỜNG BẠCH ĐẰNG (VEN SÔNG BỜ TÂY): Chạy dọc bờ sông tại X = -3.12 (Z = -20.0 đến +14.0)
+    // J. BACH DANG ST (WEST RIVERSIDE): Runs along west bank at X = -3.12 (Z = -20.0 to +14.0)
     addRoad(-3.12, -3.0, 0.22, 34.0);
     addStripe(-3.12, -3.0, 34.0, true);
     addStripe(-3.12 - 0.05, -3.0, 34.0, false);
     addStripe(-3.12 + 0.05, -3.0, 34.0, false);
 
-    // K. ĐƯỜNG TRẦN HƯNG ĐẠO (VEN SÔNG BỜ ĐÔNG): Chạy dọc bờ sông tại X = +3.12 (Z = -20.0 đến +14.0)
+    // K. TRAN HUNG DAO ST (EAST RIVERSIDE): Runs along east bank at X = +3.12 (Z = -20.0 to +14.0)
     addRoad(3.12, -3.0, 0.22, 34.0);
     addStripe(3.12, -3.0, 34.0, true);
     addStripe(3.12 - 0.05, -3.0, 34.0, false);
     addStripe(3.12 + 0.05, -3.0, 34.0, false);
 
-    // L. CÁC TRỤC ĐƯỜNG PHỐ NỘI ĐÔ SONG SONG & GIAO CẮT
-    // Đường Trần Phú (bờ Tây X = -4.60):
+    // L. PARALLEL & INTERSECTING URBAN ARTERIALS
+    // Tran Phu St (West Bank X = -4.60):
     addRoad(-4.60, -3.0, 0.22, 34.0);
     addStripe(-4.60, -3.0, 34.0, true);
 
-    // Đường 2 Tháng 9 (bờ Tây nối từ nút giao Cầu Rồng về phía Nam Z = 0 đến +14):
+    // 2 Thang 9 St (West Bank connecting Dragon Bridge south junction, Z = 0 to +14):
     addRoad(-3.12, 7.0, 0.24, 14.0);
 
-    // Đường Ngô Quyền (đại lộ lớn xuyên suốt bờ Đông X = +5.80, Z = -16.0 đến +8.0):
+    // Ngo Quyen Blvd (Major East Bank arterial, X = +5.80, Z = -16.0 to +8.0):
     addRoad(5.80, -4.0, 0.28, 24.0);
     addStripe(5.80, -4.0, 24.0, true);
     addStripe(5.80 - 0.065, -4.0, 24.0, false);
     addStripe(5.80 + 0.065, -4.0, 24.0, false);
 
-    // M. CÁC BÙNG BINH & QUẢNG TRƯỜNG GIAO LỘ THỰC TẾ
-    // 1. Bùng binh Ngô Quyền - Võ Văn Kiệt (X = 5.80, Z = 0.0)
+    // M. REAL-WORLD ROUNDABOUTS & CIVIC PLAZAS
+    // 1. Ngo Quyen - Vo Van Kiet Roundabout (X = 5.80, Z = 0.0)
     const rb1 = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.008, 24), this.grassMat);
     rb1.position.set(5.80, 0.016, 0.0);
     roadsGroup.add(rb1);
 
-    // 2. Bùng binh Ngô Quyền - Phạm Văn Đồng (X = 5.80, Z = -12.25)
+    // 2. Ngo Quyen - Pham Van Dong Roundabout (X = 5.80, Z = -12.25)
     const rb2 = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.008, 24), this.grassMat);
     rb2.position.set(5.80, 0.016, -12.25);
     roadsGroup.add(rb2);
 
-    // 3. Quảng trường Bãi biển Mỹ Khê (nằm hoàn toàn trên phố đi bộ ven biển phía Đông, X = 20.36, Z = 0.0)
+    // 3. My Khe Beach Civic Plaza (situated on East seaside promenade, X = 20.36, Z = 0.0)
     const sqBeach = new THREE.Mesh(
       new THREE.BoxGeometry(0.16, 0.008, 0.38),
       this.sidewalkMat
@@ -698,7 +730,7 @@ export class CityEnvironment {
     sqBeach.position.set(20.36, 0.016, 0.0);
     roadsGroup.add(sqBeach);
 
-    // 4. Quảng trường Công viên Biển Đông (nằm trên phố đi bộ ven biển phía Đông, X = 20.36, Z = -12.25)
+    // 4. East Sea Park Civic Plaza (situated on East seaside promenade, X = 20.36, Z = -12.25)
     const sqEastSea = new THREE.Mesh(
       new THREE.BoxGeometry(0.16, 0.008, 0.38),
       this.sidewalkMat
@@ -706,45 +738,45 @@ export class CityEnvironment {
     sqEastSea.position.set(20.36, 0.016, -12.25);
     roadsGroup.add(sqEastSea);
 
-    // Các đường nhánh kết nối cũ bờ Tây (Thái Phiên, Hùng Vương, Quang Trung, Hà Thị Thân):
-    addRoad(-3.86, -4.0, 0.16, 1.48, true);  // Thái Phiên
-    addRoad(-3.86, -8.0, 0.18, 1.48, true);  // Hùng Vương
+    // West Bank intersecting urban streets (Thai Phien, Hung Vuong, Quang Trung, Ha Thi Than):
+    addRoad(-3.86, -4.0, 0.16, 1.48, true);  // Thai Phien St
+    addRoad(-3.86, -8.0, 0.18, 1.48, true);  // Hung Vuong St
     addRoad(-3.86, -15.5, 0.18, 1.48, true); // Quang Trung
-    addRoad(4.46, -4.5, 0.16, 2.68, true);   // Hà Thị Thân
-    addRoad(4.46, -8.5, 0.16, 2.68, true);   // An Hải Bắc
+    addRoad(4.46, -4.5, 0.16, 2.68, true);   // Ha Thi Than St
+    addRoad(4.46, -8.5, 0.16, 2.68, true);   // An Hai Bac St
 
     this.group.add(roadsGroup);
   }
 
   // -------------------------------------------------------------------------
-  // 3. BỜ KÈ SÔNG HÀN & PHỐ ĐI BỘ VEN SÔNG (RIVERWALK & QUAYS)
+  // 3. HAN RIVER EMBANKMENT & PROMENADES (RIVERWALK & QUAYS)
   // -------------------------------------------------------------------------
   _buildSidewalksAndQuays() {
     const swGroup = new THREE.Group();
-    const quayH = 0.055; // Cao hơn mặt nước 5.5m
+    const quayH = 0.055; // Elevated 5.5m above water level
 
-    // Tuyến phố đi bộ lát đá và tường kè bờ sông chạy dọc từ Bắc vào Nam (Z = -20 đến +14)
-    // Tự nhiên luồn dưới gầm Cầu Rồng và Cầu Sông Hàn mà KHÔNG bao giờ cắt ngang qua lòng đường xe chạy!
+    // Paved stone promenade and concrete river wall running North to South (Z = -20 to +14)
+    // Passes under Dragon Bridge & Han River Bridge clear of traffic lanes
     for (const signX of [-1.0, 1.0]) {
       const isWest = signX < 0;
-      const wallX = signX * 2.79;       // Tường kè mép nước
-      const promX = signX * 2.90;       // Tâm vỉa hè phố đi bộ bờ sông
+      const wallX = signX * 2.79;       // Riverside quay edge
+      const promX = signX * 2.90;       // Riverwalk promenade centerline
 
-      // 1. Tường kè đá trắng mép nước
+      // 1. White stone quay retaining wall
       const wallGeo = new THREE.BoxGeometry(0.04, quayH, 34.0);
       const wallMesh = new THREE.Mesh(wallGeo, this.quayMat);
       wallMesh.position.set(wallX, quayH / 2, -3.0);
       wallMesh.receiveShadow = true;
       swGroup.add(wallMesh);
 
-      // 2. Vỉa hè đi bộ bờ sông Bạch Đằng & Trần Hưng Đạo (rộng 0.18)
+      // 2. Riverwalk sidewalks along Bach Dang & Tran Hung Dao (0.18 width)
       const promGeo = new THREE.BoxGeometry(0.18, 0.02, 34.0);
       const promMesh = new THREE.Mesh(promGeo, this.sidewalkMat);
       promMesh.position.set(promX, quayH, -3.0);
       promMesh.receiveShadow = true;
       swGroup.add(promMesh);
 
-      // 3. Lan can hoa văn bờ sông bảo vệ du khách ngắm cảnh
+      // 3. Decorative riverside safety railings
       const riverRailGeo = new THREE.BoxGeometry(0.008, 0.008, 34.0);
       const riverRail = new THREE.Mesh(riverRailGeo, this.railingMat);
       riverRail.position.set(wallX + (isWest ? -0.015 : 0.015), quayH + 0.012, -3.0);
@@ -755,12 +787,12 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 4. CÁC CÔNG TRÌNH BIỂU TƯỢNG ĐÀ NẴNG (ICONIC LANDMARKS)
+  // 4. ICONIC DA NANG CITY ARCHITECTURE & LANDMARKS
   // -------------------------------------------------------------------------
   _buildIconicLandmarks() {
     const lmGroup = new THREE.Group();
 
-    // A. TRUNG TÂM HÀNH CHÍNH ĐÀ NẴNG (THÁP TRÁI BẮP / BÚP SEN 34 TẦNG CAO 167M)
+    // A. DANANG ADMINISTRATIVE CENTER ("CORN TOWER" 34 FLOORS, 167M HEIGHT)
     const adminTowerGroup = new THREE.Group();
     adminTowerGroup.position.set(-3.85, 0.0, -14.2);
 
@@ -799,7 +831,7 @@ export class CityEnvironment {
     adminTowerGroup.add(adminBeacon);
     lmGroup.add(adminTowerGroup);
 
-    // B. NOVOTEL DANANG PREMIER HAN RIVER (THÁP KÍNH 37 TẦNG CAO 150M)
+    // B. NOVOTEL DANANG PREMIER HAN RIVER (37 FLOORS, 150M GLASS TOWER)
     const novotelGroup = new THREE.Group();
     novotelGroup.position.set(-3.65, 0.0, -12.9);
     const novoH = 1.50;
@@ -816,14 +848,14 @@ export class CityEnvironment {
     novotelGroup.add(crown);
     lmGroup.add(novotelGroup);
 
-    // C. HILTON DANANG & INDOCHINA RIVERSIDE TOWERS (28 TẦNG)
+    // C. HILTON DANANG & INDOCHINA RIVERSIDE TOWERS (28 FLOORS)
     const hiltonGeo = new THREE.BoxGeometry(0.32, 1.15, 0.48);
     const hiltonMesh = new THREE.Mesh(hiltonGeo, this.glassMat);
     hiltonMesh.position.set(-3.60, 1.15 / 2 + 0.02, -9.8);
     hiltonMesh.castShadow = true;
     lmGroup.add(hiltonMesh);
 
-    // D. CÔNG VIÊN APEC & MÁI VÒM CÁNH DIỀU BAY (APEC PARK)
+    // D. APEC PEACE PARK WITH ICONIC KITE CANOPY
     const apecGroup = new THREE.Group();
     apecGroup.position.set(-3.40, 0.02, 1.25);
     const parkBaseGeo = new THREE.BoxGeometry(0.65, 0.02, 0.95);
@@ -849,7 +881,7 @@ export class CityEnvironment {
     apecGroup.add(kiteMesh);
     lmGroup.add(apecGroup);
 
-    // E. BẢO TÀNG ĐIÊU KHẮC CHĂM
+    // E. MUSEUM OF CHAM SCULPTURE
     const chamGroup = new THREE.Group();
     chamGroup.position.set(-3.75, 0.02, 0.55);
     const chamBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.10, 0.45), this.facadeMats[1]);
@@ -862,7 +894,7 @@ export class CityEnvironment {
     chamGroup.add(chamRoof);
     lmGroup.add(chamGroup);
 
-    // F. CẦU TÌNH YÊU & TƯỢNG CÁ CHÉP HÓA RỒNG (BỜ ĐÔNG SƠN TRÀ)
+    // F. LOVE LOCK BRIDGE & CARP-DRAGON STATUE (SON TRA EAST BANK)
     const loveBridgeGroup = new THREE.Group();
     loveBridgeGroup.position.set(2.70, 0.035, -1.35);
     const pierGeo = new THREE.BoxGeometry(0.35, 0.025, 0.55);
@@ -891,7 +923,7 @@ export class CityEnvironment {
     loveBridgeGroup.add(carpMesh);
     lmGroup.add(loveBridgeGroup);
 
-    // G. VINPEARL CONDOTEL (BỜ ĐÔNG SƠN TRÀ)
+    // G. VINPEARL CONDOTEL (SON TRA EAST BANK)
     const vinpearlGeo = new THREE.BoxGeometry(0.35, 1.25, 0.52);
     const vinpearlMesh = new THREE.Mesh(vinpearlGeo, this.glassMat);
     vinpearlMesh.position.set(3.75, 1.25 / 2 + 0.02, -11.5);
@@ -902,7 +934,7 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 5. CÁC KHỐI NHÀ PHỐ & KHU DÂN CƯ ĐÔ THỊ BÀN CỜ
+  // 5. URBAN GRID ARCHITECTURAL BLOCKS & RESIDENTIAL QUARTERS
   // -------------------------------------------------------------------------
   _buildUrbanCityBlocks() {
     const blocksGroup = new THREE.Group();
@@ -917,29 +949,29 @@ export class CityEnvironment {
       { minX: 3.4, maxX: 5.4, minZ: -11.8, maxZ: -2.0, minH: 0.18, maxH: 0.45, cols: 4, rows: 16 },
       { minX: 3.4, maxX: 5.4, minZ: 0.8, maxZ: 8.5, minH: 0.15, maxH: 0.32, cols: 4, rows: 12 },
 
-      // 1. Dãy phố thương mại & Shophouse hai bên Đại lộ Võ Văn Kiệt hướng ra biển Mỹ Khê
+      // 1. Shophouses & commercial storefronts flanking Vo Van Kiet Blvd towards My Khe Beach
       { minX: 6.2, maxX: 19.8, minZ: -1.2, maxZ: -0.3, minH: 0.25, maxH: 0.70, cols: 20, rows: 2 },
       { minX: 6.2, maxX: 19.8, minZ: 0.3, maxZ: 1.2, minH: 0.25, maxH: 0.70, cols: 20, rows: 2 },
 
-      // 2. Dãy khách sạn & cao ốc hai bên Đại lộ Phạm Văn Đồng hướng ra Công viên Biển Đông
+      // 2. High-rise hotel row along Pham Van Dong Blvd towards East Sea Park
       { minX: 4.2, maxX: 19.8, minZ: -13.5, maxZ: -12.6, minH: 0.25, maxH: 0.65, cols: 22, rows: 2 },
       { minX: 4.2, maxX: 19.8, minZ: -11.9, maxZ: -11.0, minH: 0.25, maxH: 0.65, cols: 22, rows: 2 },
 
-      // 3. Khu đô thị & nhà phố nội đô Sơn Trà (giữa Ngô Quyền và Hồ Nghinh):
-      // Phân khu Bắc (Phạm Văn Đồng đến Dương Đình Nghệ)
+      // 3. Son Tra urban residential district (between Ngo Quyen and Ho Nghinh):
+      // North Sector (Pham Van Dong to Duong Dinh Nghe)
       { minX: 6.2, maxX: 13.8, minZ: -11.8, maxZ: -8.8, minH: 0.18, maxH: 0.42, cols: 10, rows: 5 },
-      // Phân khu Trung (Dương Đình Nghệ đến Nguyễn Công Trứ)
+      // Central Sector (Duong Dinh Nghe to Nguyen Cong Tru)
       { minX: 6.2, maxX: 13.8, minZ: -8.2, maxZ: -4.8, minH: 0.18, maxH: 0.45, cols: 10, rows: 6 },
-      // Phân khu Nam (Nguyễn Công Trứ đến Võ Văn Kiệt)
+      // South Sector (Nguyen Cong Tru to Vo Van Kiet)
       { minX: 6.2, maxX: 13.8, minZ: -4.2, maxZ: -1.5, minH: 0.20, maxH: 0.48, cols: 10, rows: 5 },
 
-      // 4. Khu phố khách sạn, resort & căn hộ cao tầng ven biển (giữa Hồ Nghinh và Võ Nguyên Giáp):
-      // Dãy khách sạn cao ốc ven biển Sơn Trà - Biển Mỹ Khê
+      // 4. Beachfront luxury hotels and high-rise condominiums (between Ho Nghinh and Vo Nguyen Giap):
+      // Son Tra - My Khe beachfront high-rise resort strip
       { minX: 14.6, maxX: 19.8, minZ: -11.8, maxZ: -8.8, minH: 0.35, maxH: 0.90, cols: 8, rows: 4 },
       { minX: 14.6, maxX: 19.8, minZ: -8.2, maxZ: -4.8, minH: 0.40, maxH: 0.95, cols: 8, rows: 5 },
       { minX: 14.6, maxX: 19.8, minZ: -4.2, maxZ: -1.5, minH: 0.38, maxH: 0.92, cols: 8, rows: 4 },
 
-      // 5. Khu phố du lịch An Thượng & Nam Sơn Trà (phía Nam Võ Văn Kiệt):
+      // 5. An Thuong tourist quarter & South Son Tra district (South of Vo Van Kiet):
       { minX: 6.2, maxX: 19.8, minZ: 1.5, maxZ: 7.2, minH: 0.18, maxH: 0.55, cols: 20, rows: 8 },
     ];
 
@@ -988,7 +1020,7 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 6. CÂY XANH NHIỆT ĐỚI VEN SÔNG & ĐÈN ĐƯỜNG
+  // 6. TROPICAL STREET TREES, PALMS & URBAN LIGHTING
   // -------------------------------------------------------------------------
   _buildTreesAndStreetFurniture() {
     const vegGroup = new THREE.Group();
@@ -1000,7 +1032,7 @@ export class CityEnvironment {
       const z = -17.0 + (i / treeCount) * 32.0;
       if (Math.abs(z) < 0.35 || Math.abs(z - -12.25) < 0.35) continue;
 
-      // Cây bờ Tây (X ≈ -3.02)
+      // West bank roadside trees (X ≈ -3.02)
       const tWest = new THREE.Group();
       const trW = new THREE.Mesh(trunkGeo, this.trunkMat);
       trW.position.y = 0.025;
@@ -1011,7 +1043,7 @@ export class CityEnvironment {
       tWest.position.set(-3.02, 0.035, z);
       vegGroup.add(tWest);
 
-      // Cây bờ Đông (X ≈ +3.02)
+      // East bank roadside trees (X ≈ +3.02)
       const tEast = new THREE.Group();
       const trE = new THREE.Mesh(trunkGeo, this.trunkMat);
       trE.position.y = 0.025;
@@ -1023,11 +1055,11 @@ export class CityEnvironment {
       vegGroup.add(tEast);
     }
 
-    // Cây dừa nhiệt đới nghiêng bóng dọc theo Phố đi bộ ven biển Võ Nguyên Giáp
+    // Tropical coconut palms along Vo Nguyen Giap seaside promenade
     const beachPalmCount = 32;
     for (let p = 0; p < beachPalmCount; p++) {
       const z = -15.0 + (p / beachPalmCount) * 22.5;
-      if (Math.abs(z) < 0.22 || Math.abs(z - -12.25) < 0.22) continue; // Giữ thông thoáng lối vào quảng trường & tượng đài
+      if (Math.abs(z) < 0.22 || Math.abs(z - -12.25) < 0.22) continue; // Keep entrance clear towards civic plaza & monument
       const tBeach = new THREE.Group();
       const trP = new THREE.Mesh(trunkGeo, this.trunkMat);
       trP.position.y = 0.03;
@@ -1040,7 +1072,7 @@ export class CityEnvironment {
       vegGroup.add(tBeach);
     }
 
-    // Hàng cây bóng mát dọc vỉa hè Đại lộ Võ Văn Kiệt
+    // Shaded canopy trees along Vo Van Kiet sidewalks
     for (let k = 0; k < 18; k++) {
       const x = 5.0 + k * 0.82;
       for (const signZ of [-1, 1]) {
@@ -1060,12 +1092,12 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 6b. HỆ THỐNG BIỂN TÊN ĐƯỜNG & GIÁ LONG MÔN CHỈ DẪN CHUẨN THỰC ĐỊA ĐÀ NẴNG
+  // 6b. GEOLOCATED DA NANG STREET SIGNS & OVERHEAD HIGHWAY GANTRIES
   // -------------------------------------------------------------------------
   _buildStreetSignageSystem() {
     const signsGroup = new THREE.Group();
 
-    // Helper 1: Vẽ texture biển tên đường trên HTML5 Canvas
+    // Helper 1: Renders street signage texture on HTML5 Canvas
     const createSignTex = (opts) => {
       const { title, sub = '', width = 512, height = 160, isGantry = false, arrows = '' } = opts;
       const canvas = document.createElement('canvas');
@@ -1073,7 +1105,7 @@ export class CityEnvironment {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
 
-      // Nền biển: Xanh lam đậm (Cobalt Blue #004b87) cho biển đô thị, Xanh lục cao tốc (#00733e) cho giá long môn
+      // Sign background: Cobalt Blue (#004b87) for urban corners, Highway Green (#00733e) for gantries
       const bgColor = isGantry ? '#00733e' : '#004b87';
       ctx.fillStyle = bgColor;
       const r = 16;
@@ -1085,7 +1117,7 @@ export class CityEnvironment {
         ctx.fillRect(0, 0, width, height);
       }
 
-      // Viền trắng phản quang đôi theo quy chuẩn giao thông Việt Nam
+      // Dual retroreflective border per Vietnamese highway standards
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 8;
       if (ctx.roundRect) {
@@ -1104,7 +1136,7 @@ export class CityEnvironment {
       ctx.textBaseline = 'middle';
 
       if (isGantry) {
-        // Biển giá long môn trên cao
+        // Overhead gantry signboard
         if (sub) {
           ctx.fillStyle = '#ffde59';
           ctx.font = 'bold 22px "Segoe UI", Arial, sans-serif';
@@ -1120,7 +1152,7 @@ export class CityEnvironment {
           ctx.fillText(arrows, width / 2, height - 38);
         }
       } else {
-        // Biển tên đường ngã tư / góc phố
+        // Street corner intersection nameplate
         if (sub) {
           ctx.fillStyle = '#ffde59';
           ctx.font = 'bold 22px "Segoe UI", Arial, sans-serif';
@@ -1144,7 +1176,7 @@ export class CityEnvironment {
       return tex;
     };
 
-    // Helper 2: Tạo tấm biển kim loại 2 mặt (chữ đọc thuận từ cả 2 chiều ngược xuôi)
+    // Helper 2: Double-sided metallic signboard mesh
     const createPlateMesh = (title, sub, w = 0.13, h = 0.042) => {
       const tex = createSignTex({ title, sub, width: 512, height: 160 });
       const mat = new THREE.MeshStandardMaterial({
@@ -1160,18 +1192,18 @@ export class CityEnvironment {
       const plateGroup = new THREE.Group();
       const geo = new THREE.PlaneGeometry(w, h);
 
-      // Mặt trước
+      // Front face
       const front = new THREE.Mesh(geo, mat);
       front.position.z = 0.0012;
       plateGroup.add(front);
 
-      // Mặt sau (lật 180 độ để chữ không bị ngược)
+      // Rear face (flipped 180 deg for correct readability from both directions)
       const back = new THREE.Mesh(geo, mat);
       back.position.z = -0.0012;
       back.rotation.y = Math.PI;
       plateGroup.add(back);
 
-      // Tấm ốp bảo vệ kim loại phía sau
+      // Protective metallic backing plate
       const frameGeo = new THREE.BoxGeometry(w + 0.003, h + 0.003, 0.002);
       const frame = new THREE.Mesh(frameGeo, this.railingMat);
       plateGroup.add(frame);
@@ -1179,38 +1211,38 @@ export class CityEnvironment {
       return plateGroup;
     };
 
-    // Helper 3: Cột biển tên đường kim loại góc ngã tư (có 2 biển vuông góc nhau cho 2 trục đường)
+    // Helper 3: Dual-axis corner street namepost (two perpendicular signboards)
     const addStreetCornerSign = (x, z, streetX, streetZ, district = 'QUẬN SƠN TRÀ') => {
       const postGroup = new THREE.Group();
       postGroup.position.set(x, 0.012, z);
 
-      // Cột thép tròn mạ kẽm
+      // Galvanized steel tubular post
       const poleH = 0.082;
       const poleGeo = new THREE.CylinderGeometry(0.0025, 0.003, poleH, 8);
       const pole = new THREE.Mesh(poleGeo, this.railingMat);
       pole.position.y = poleH / 2;
       postGroup.add(pole);
 
-      // Chân đế móng cột
+      // Concrete foundation footing
       const baseGeo = new THREE.CylinderGeometry(0.006, 0.008, 0.006, 8);
       const base = new THREE.Mesh(baseGeo, this.railingMat);
       base.position.y = 0.003;
       postGroup.add(base);
 
-      // Chóp tròn bảo vệ đỉnh cột
+      // Top dome cap
       const capGeo = new THREE.SphereGeometry(0.004, 8, 8);
       const cap = new THREE.Mesh(capGeo, this.railingMat);
       cap.position.y = poleH + 0.003;
       postGroup.add(cap);
 
-      // Biển 1: Gắn song song trục X (được nhìn thấy từ hướng Z)
+      // Sign 1: Mounted along X-axis (visible from Z approach)
       if (streetX) {
         const plateX = createPlateMesh(streetX, district);
         plateX.position.set(0, poleH - 0.012, 0);
         postGroup.add(plateX);
       }
 
-      // Biển 2: Gắn song song trục Z (được nhìn thấy từ hướng X)
+      // Sign 2: Mounted along Z-axis (visible from X approach)
       if (streetZ) {
         const plateZ = createPlateMesh(streetZ, district);
         plateZ.position.set(0, poleH - 0.026, 0);
@@ -1221,7 +1253,7 @@ export class CityEnvironment {
       signsGroup.add(postGroup);
     };
 
-    // Helper 4: Giá long môn trên cao (Overhead Highway Gantry) bắc ngang qua đại lộ
+    // Helper 4: Overhead highway gantry spanning across boulevard carriageways
     const addGantry = (x, z, isAcrossZ, title, sub, arrows, span = 0.36) => {
       const gantryGroup = new THREE.Group();
       gantryGroup.position.set(x, 0.012, z);
@@ -1229,7 +1261,7 @@ export class CityEnvironment {
       const gantryH = 0.105;
       const halfSpan = span / 2;
 
-      // 2 Cột giàn thép 2 bên vỉa hè
+      // Twin steel truss support posts on sidewalks
       const colGeo = new THREE.CylinderGeometry(0.004, 0.004, gantryH, 8);
       const colL = new THREE.Mesh(colGeo, this.gantrySteelMat);
       const colR = new THREE.Mesh(colGeo, this.gantrySteelMat);
@@ -1243,7 +1275,7 @@ export class CityEnvironment {
       gantryGroup.add(colL);
       gantryGroup.add(colR);
 
-      // Dầm giàn thép ngang bắc qua đường
+      // Horizontal steel truss beam spanning across roadway
       const beamGeo = new THREE.BoxGeometry(
         isAcrossZ ? 0.008 : span,
         0.012,
@@ -1253,7 +1285,7 @@ export class CityEnvironment {
       beam.position.y = gantryH - 0.006;
       gantryGroup.add(beam);
 
-      // Tấm biển chỉ dẫn treo trên giá
+      // Suspended gantry signage plate
       const signW = span * 0.72;
       const signH = 0.058;
       const tex = createSignTex({ title, sub, width: 512, height: 200, isGantry: true, arrows });
@@ -1292,62 +1324,62 @@ export class CityEnvironment {
     };
 
     // =========================================================================
-    // A. BIỂN TÊN ĐƯỜNG TẠI CÁC GIAO LỘ KẾT NỐI BIỂN MỸ KHÊ & BÁN ĐẢO SƠN TRÀ
-    // Toàn bộ cột biển được đặt CHUẨN XÁC TRÊN VỈA HÈ (không cắm trên mặt đường xe chạy)
+    // A. STREET SIGNS AT KEY INTERSECTIONS CONNECTING MY KHE BEACH & SON TRA PENINSULA
+    // All signposts are positioned on sidewalks clear of roadway traffic
     // =========================================================================
-    // 1. Ngã ba Biển Mỹ Khê (Võ Văn Kiệt & Võ Nguyên Giáp - vỉa hè góc Tây Bắc & Tây Nam)
+    // 1. My Khe Beach junction (Vo Van Kiet & Vo Nguyen Giap - NW & SW sidewalks)
     addStreetCornerSign(19.82, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
     addStreetCornerSign(19.82,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 2. Ngã ba Công viên Biển Đông (Phạm Văn Đồng & Võ Nguyên Giáp - vỉa hè góc Tây Bắc & Tây Nam)
+    // 2. East Sea Park junction (Pham Van Dong & Vo Nguyen Giap - NW & SW sidewalks)
     addStreetCornerSign(19.82, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
     addStreetCornerSign(19.82, -12.04, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 3. Ngã tư Hồ Nghinh - Võ Văn Kiệt (vỉa hè góc Tây Bắc & Tây Nam)
+    // 3. Ho Nghinh - Vo Van Kiet intersection (NW & SW corner sidewalks)
     addStreetCornerSign(14.05, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG HỒ NGHINH');
     addStreetCornerSign(14.05,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG HỒ NGHINH');
 
-    // 4. Ngã tư Hồ Nghinh - Phạm Văn Đồng (vỉa hè góc phố)
+    // 4. Ho Nghinh - Pham Van Dong intersection (corner sidewalks)
     addStreetCornerSign(14.05, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG HỒ NGHINH');
 
-    // 5. Ngã tư Ngô Quyền - Võ Văn Kiệt (Vòng xuyến Cầu Rồng bờ Đông - vỉa hè góc phố)
+    // 5. Ngo Quyen - Vo Van Kiet intersection (Dragon Bridge East Roundabout corners)
     addStreetCornerSign(5.62, -0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG NGÔ QUYỀN');
     addStreetCornerSign(5.62,  0.22, 'ĐƯỜNG VÕ VĂN KIỆT', 'ĐƯỜNG NGÔ QUYỀN');
 
-    // 6. Ngã tư Ngô Quyền - Phạm Văn Đồng (Vòng xuyến Cầu Sông Hàn bờ Đông - vỉa hè góc phố)
+    // 6. Ngo Quyen - Pham Van Dong intersection (Han River Bridge East Roundabout corners)
     addStreetCornerSign(5.62, -12.46, 'ĐƯỜNG PHẠM VĂN ĐỒNG', 'ĐƯỜNG NGÔ QUYỀN');
 
-    // 7. Ngã ba Nguyễn Công Trứ - Võ Nguyên Giáp (vỉa hè góc phố)
+    // 7. Nguyen Cong Tru - Vo Nguyen Giap junction (corner sidewalk)
     addStreetCornerSign(19.82, -4.62, 'ĐƯỜNG NGUYỄN CÔNG TRỨ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 8. Ngã ba Dương Đình Nghệ - Võ Nguyên Giáp (vỉa hè góc phố)
+    // 8. Duong Dinh Nghe - Vo Nguyen Giap junction (corner sidewalk)
     addStreetCornerSign(19.82, -8.62, 'ĐƯỜNG DƯƠNG ĐÌNH NGHỆ', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 9. Khu Phố Du lịch An Thượng - Võ Nguyên Giáp (vỉa hè góc phố)
+    // 9. An Thuong Tourist Quarter - Vo Nguyen Giap junction (corner sidewalk)
     addStreetCornerSign(19.82, 2.38, 'PHỐ DU LỊCH AN THƯỢNG', 'ĐƯỜNG VÕ NGUYÊN GIÁP');
 
-    // 10. Phố Trần Bạch Đằng (Khu phố Tây - vỉa hè góc phố)
+    // 10. Tran Bach Dang St (An Thuong Quarter corner sidewalk)
     addStreetCornerSign(18.05, 2.38, 'PHỐ AN THƯỢNG', 'ĐƯỜNG TRẦN BẠCH ĐẰNG');
 
     // =========================================================================
-    // B. BIỂN TÊN ĐƯỜNG TẠI CÁC ĐẦU CẦU & BỜ SÔNG HÀN
+    // B. STREET NAMEPLATES AT BRIDGE APPROACHES & HAN RIVER BANKS
     // =========================================================================
-    // 11. Cầu Rồng bờ Đông (Võ Văn Kiệt - Trần Hưng Đạo - vỉa hè góc bờ sông)
+    // 11. Dragon Bridge East (Vo Van Kiet - Tran Hung Dao - riverside sidewalk)
     addStreetCornerSign(4.20, 0.22, 'ĐẠI LỘ VÕ VĂN KIỆT', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
 
-    // 12. Cầu Rồng bờ Tây (Nguyễn Văn Linh - Bạch Đằng - Hải Châu - vỉa hè góc bờ sông)
+    // 12. Dragon Bridge West (Nguyen Van Linh - Bach Dang - Hai Chau riverside sidewalk)
     addStreetCornerSign(-4.20, 0.22, 'ĐẠI LỘ NGUYỄN VĂN LINH', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
 
-    // 13. Cầu Sông Hàn bờ Đông (Phạm Văn Đồng - Trần Hưng Đạo - vỉa hè góc bờ sông)
+    // 13. Han River Bridge East (Pham Van Dong - Tran Hung Dao riverside sidewalk)
     addStreetCornerSign(3.90, -12.46, 'ĐẠI LỘ PHẠM VĂN ĐỒNG', 'ĐƯỜNG TRẦN HƯNG ĐẠO');
 
-    // 14. Cầu Sông Hàn bờ Tây (Lê Duẩn - Bạch Đằng - Hải Châu - vỉa hè góc bờ sông)
+    // 14. Han River Bridge West (Le Duan - Bach Dang - Hai Chau riverside sidewalk)
     addStreetCornerSign(-3.90, -12.46, 'ĐƯỜNG LÊ DUẨN', 'ĐƯỜNG BẠCH ĐẰNG', 'QUẬN HẢI CHÂU');
 
     // =========================================================================
-    // C. CÁC BIỂN GIÁ LONG MÔN TRÊN CAO (OVERHEAD GANTRY SIGNS)
+    // C. OVERHEAD HIGHWAY GANTRY SIGNS
     // =========================================================================
-    // 1. Giá long môn trên Võ Văn Kiệt hướng ra biển Mỹ Khê (X = 18.2, Z = 0.0)
+    // 1. Overhead gantry on Vo Van Kiet Blvd facing My Khe Beach (X = 18.2, Z = 0.0)
     addGantry(
       18.20, 0.0, true,
       'BIỂN MỸ KHÊ | MY KHE BEACH',
@@ -1356,7 +1388,7 @@ export class CityEnvironment {
       0.38
     );
 
-    // 2. Giá long môn trên Phạm Văn Đồng hướng ra biển (X = 18.2, Z = -12.25)
+    // 2. Overhead gantry on Pham Van Dong Blvd facing the ocean (X = 18.2, Z = -12.25)
     addGantry(
       18.20, -12.25, true,
       'CÔNG VIÊN BIỂN ĐÔNG',
@@ -1365,7 +1397,7 @@ export class CityEnvironment {
       0.36
     );
 
-    // 3. Giá long môn trên Đường ven biển Võ Nguyên Giáp (X = 20.15, Z = -6.0)
+    // 3. Overhead gantry on Vo Nguyen Giap Coastal Blvd (X = 20.15, Z = -6.0)
     addGantry(
       20.15, -6.0, false,
       'ĐƯỜNG VÕ NGUYÊN GIÁP',
@@ -1374,7 +1406,7 @@ export class CityEnvironment {
       0.36
     );
 
-    // 4. Giá long môn trên Võ Văn Kiệt hướng về Cầu Rồng & TTTP (X = 6.8, Z = 0.0)
+    // 4. Overhead gantry on Vo Van Kiet Blvd towards Dragon Bridge & City Center (X = 6.8, Z = 0.0)
     addGantry(
       6.80, 0.0, true,
       'CẦU RỒNG - TRUNG TÂM TP',
@@ -1383,7 +1415,7 @@ export class CityEnvironment {
       0.38
     );
 
-    // 5. Giá long môn trên Nguyễn Văn Linh bờ Tây hướng sang Cầu Rồng (X = -6.5, Z = 0.0)
+    // 5. Overhead gantry on Nguyen Van Linh Blvd towards Dragon Bridge (X = -6.5, Z = 0.0)
     addGantry(
       -6.50, 0.0, true,
       'CẦU RỒNG - BIỂN MỸ KHÊ',
@@ -1392,13 +1424,22 @@ export class CityEnvironment {
       0.38
     );
 
+    // 6. Overhead gantry on Truong Sa Blvd approaching Marble Mountains (X = 35.0, Z = 60.0)
+    addGantry(
+      35.0, 60.0, false,
+      'DANH THẮNG NGŨ HÀNH SƠN',
+      'MARBLE MOUNTAINS • NON NƯỚC',
+      '⬆ NÚI NGŨ HÀNH SƠN   |   PHỐ CỔ HỘI AN ⬇',
+      0.36
+    );
+
     // =========================================================================
-    // D. TƯỢNG ĐÀI CHÀO MỪNG BIỂN MỸ KHÊ (BEACH WELCOME PYLON)
-    // Đặt trang trọng trên Quảng trường phố đi bộ ven biển phía Đông, hướng thẳng mặt ra Đại lộ Võ Văn Kiệt
+    // D. MY KHE BEACH WELCOME MONUMENT PYLON
+    // Installed on East seaside promenade plaza, facing directly down Vo Van Kiet Blvd
     // =========================================================================
     const welcomePylon = new THREE.Group();
     welcomePylon.position.set(20.40, 0.015, 0.0);
-    welcomePylon.rotation.y = -Math.PI / 2; // Hướng mặt về phía Tây đón xe từ Cầu Rồng tới
+    welcomePylon.rotation.y = -Math.PI / 2; // Facing West towards oncoming traffic from Dragon Bridge
 
     const wTex = createSignTex({
       title: 'BIỂN MỸ KHÊ',
@@ -1426,12 +1467,12 @@ export class CityEnvironment {
   }
 
   // -------------------------------------------------------------------------
-  // 7. HỆ THỐNG XE CỘ LƯU THÔNG SỐNG ĐỘNG (TRAFFIC VEHICLES)
+  // 7. DYNAMIC VEHICULAR TRAFFIC SIMULATION
   // -------------------------------------------------------------------------
   _buildTrafficVehicles() {
     const trafficGroup = new THREE.Group();
 
-    // Hàm tạo 1 xe low-poly: thân xe + cabin kính + 4 bánh + đèn pha & hậu
+    // Low-poly vehicle generator: chassis + cabin + 4 wheels + headlights & taillights
     const createVehicle = (type = 'car', colorMat = this.carColors[0]) => {
       const veh = new THREE.Group();
 
@@ -1442,14 +1483,14 @@ export class CityEnvironment {
         bodyW = 0.009; bodyH = 0.014; bodyL = 0.024;
       }
 
-      // Thân xe
+      // Vehicle chassis body
       const bodyGeo = new THREE.BoxGeometry(bodyL, bodyH, bodyW);
       const body = new THREE.Mesh(bodyGeo, colorMat);
       body.position.y = bodyH / 2 + 0.003;
       body.castShadow = true;
       veh.add(body);
 
-      // Cabin kính
+      // Glass cabin
       if (type !== 'bike') {
         const cabH = bodyH * 0.75;
         const cabGeo = new THREE.BoxGeometry(bodyL * 0.55, cabH, bodyW * 0.88);
@@ -1458,7 +1499,7 @@ export class CityEnvironment {
         veh.add(cabin);
       }
 
-      // Đèn pha trước (vàng trắng) & Đèn hậu sau (đỏ)
+      // Headlights (warm white) & Taillights (red)
       const hlGeo = new THREE.BoxGeometry(0.002, 0.003, bodyW * 0.7);
       const hl = new THREE.Mesh(hlGeo, this.headlightMat);
       hl.position.set(bodyL / 2 + 0.001, bodyH * 0.6, 0);
@@ -1468,7 +1509,7 @@ export class CityEnvironment {
       tl.position.set(-bodyL / 2 - 0.001, bodyH * 0.6, 0);
       veh.add(tl);
 
-      // Biển taxi trên nóc nếu là xe taxi Mai Linh / Tiên Sa
+      // Rooftop taxi sign for Mai Linh / Tien Sa vehicles
       if (colorMat === this.carColors[2] || colorMat === this.carColors[3]) {
         const signMesh = new THREE.Mesh(
           new THREE.BoxGeometry(0.012, 0.004, 0.006),
@@ -1481,9 +1522,9 @@ export class CityEnvironment {
       return veh;
     };
 
-    // Định nghĩa các luồng giao thông (Traffic Routes):
-    // Luồng 1: Tuyến Cầu Rồng (Đông - Tây qua lại giữa Sơn Trà và Hải Châu)
-    // 3 làn hướng Tây (X từ +18 xuống -18): Z = -0.045, -0.085, -0.125
+    // Define traffic flow routes:
+    // Route 1: Dragon Bridge corridor (East - West between Son Tra and Hai Chau)
+    // 3 Westbound lanes (X: +18 down to -18): Z = -0.045, -0.085, -0.125
     const westLanes = [-0.045, -0.085, -0.125];
     westLanes.forEach((laneZ, idx) => {
       for (let k = 0; k < 4; k++) {
@@ -1495,7 +1536,7 @@ export class CityEnvironment {
         this.vehicles.push({
           mesh: vehObj,
           corridor: 'cau-rong',
-          dir: -1, // Hướng Tây (từ bờ biển hướng về Cầu Rồng)
+          dir: -1, // Westbound (from beach towards Dragon Bridge)
           laneZ: laneZ,
           x: 19.4 - k * 8.5 - (idx * 2.8),
           speed: 1.6 + Math.random() * 0.8,
@@ -1505,7 +1546,7 @@ export class CityEnvironment {
       }
     });
 
-    // 3 làn hướng Đông (X từ -18 lên +19.65 thẳng ra Biển Mỹ Khê): Z = +0.045, +0.085, +0.125
+    // 3 Eastbound lanes (X: -18 up to +19.65 towards My Khe Beach): Z = +0.045, +0.085, +0.125
     const eastLanes = [0.045, 0.085, 0.125];
     eastLanes.forEach((laneZ, idx) => {
       for (let k = 0; k < 4; k++) {
@@ -1517,7 +1558,7 @@ export class CityEnvironment {
         this.vehicles.push({
           mesh: vehObj,
           corridor: 'cau-rong',
-          dir: 1, // Hướng Đông ra biển
+          dir: 1, // Eastbound towards ocean
           laneZ: laneZ,
           x: -18.0 + k * 8.5 + (idx * 2.8),
           speed: 1.6 + Math.random() * 0.8,
@@ -1527,9 +1568,9 @@ export class CityEnvironment {
       }
     });
 
-    // Luồng 2: Tuyến Cầu Sông Hàn (Lê Duẩn <-> Phạm Văn Đồng ra Công viên Biển Đông tại Z = -12.25)
+    // Route 2: Han River Bridge corridor (Le Duan <-> Pham Van Dong towards East Sea Park, Z = -12.25)
     for (let k = 0; k < 4; k++) {
-      // Hướng Tây
+      // Westbound direction
       const vW = createVehicle('car', this.carColors[k % this.carColors.length]);
       trafficGroup.add(vW);
       this.vehicles.push({
@@ -1543,7 +1584,7 @@ export class CityEnvironment {
         xMax: 19.65
       });
 
-      // Hướng Đông ra biển
+      // Eastbound direction towards beach
       const vE = createVehicle('car', this.carColors[(k + 3) % this.carColors.length]);
       trafficGroup.add(vE);
       this.vehicles.push({
@@ -1558,9 +1599,9 @@ export class CityEnvironment {
       });
     }
 
-    // Luồng 3: Tuyến đường ven sông Bạch Đằng (X = -3.12) & Trần Hưng Đạo (X = +3.12)
+    // Route 3: Riverside corridors: Bach Dang (X = -3.12) & Tran Hung Dao (X = +3.12)
     for (let k = 0; k < 6; k++) {
-      // Bạch Đằng (hướng Nam & Bắc)
+      // Bach Dang St (South & North lanes)
       const vBD = createVehicle('car', this.carColors[k % this.carColors.length]);
       trafficGroup.add(vBD);
       this.vehicles.push({
@@ -1574,7 +1615,7 @@ export class CityEnvironment {
         zMax: 13.0
       });
 
-      // Trần Hưng Đạo (hướng Nam & Bắc)
+      // Tran Hung Dao St (South & North lanes)
       const vTHD = createVehicle('car', this.carColors[(k + 1) % this.carColors.length]);
       trafficGroup.add(vTHD);
       this.vehicles.push({
@@ -1589,7 +1630,7 @@ export class CityEnvironment {
       });
     }
 
-    // Luồng 4: Tuyến Đường ven biển Võ Nguyên Giáp (X = 20.15) chạy dọc bờ biển Mỹ Khê
+    // Route 4: Vo Nguyen Giap Coastal Blvd (X = 20.15) along My Khe Beach
     for (let k = 0; k < 6; k++) {
       const isSouth = k % 2 === 0;
       const vVNG = createVehicle(k === 3 ? 'bus' : 'car', this.carColors[(k + 4) % this.carColors.length]);
@@ -1606,7 +1647,7 @@ export class CityEnvironment {
       });
     }
 
-    // Luồng 5: Tuyến Đường Ngô Quyền (X = 5.80) trục chính Sơn Trà
+    // Route 5: Ngo Quyen Blvd (X = 5.80) primary Son Tra arterial
     for (let k = 0; k < 4; k++) {
       const isSouth = k % 2 === 0;
       const vNQ = createVehicle('car', this.carColors[(k + 2) % this.carColors.length]);
@@ -1626,24 +1667,29 @@ export class CityEnvironment {
     this.group.add(trafficGroup);
   }
 
+  setTrafficEnabled(enabled = true) {
+    this.trafficEnabled = enabled;
+  }
+
   // -------------------------------------------------------------------------
-  // UPDATE HÀNG FRAME: CẬP NHẬT XE CỘ LƯU THÔNG CHUẨN ĐỘ CAO VÀ ĐỘ NGHIÊNG DỐC
+  // PER-FRAME UPDATE: VEHICLE POSITION, ROAD HEIGHT INTERPOLATION & PITCH
   // -------------------------------------------------------------------------
   update(time, delta = 0.016) {
+    if (!this.trafficEnabled) return;
     const dt = Math.min(delta, 0.1);
 
     this.vehicles.forEach(veh => {
       if (veh.corridor === 'cau-rong') {
         veh.x += veh.dir * veh.speed * dt;
 
-        // Vòng lặp khi chạy hết đại lộ
+        // Wrap vehicle when reaching corridor bounds
         if (veh.dir > 0 && veh.x > veh.xMax) veh.x = veh.xMin;
         if (veh.dir < 0 && veh.x < veh.xMin) veh.x = veh.xMax;
 
-        // Tính cao độ Y và góc pitch theo vị trí trên Cầu Rồng:
-        // - Trên mặt cầu (|X| <= 3.33): Y = 0.095
-        // - Trên dốc cầu (3.33 < |X| <= 4.25): nội suy từ 0.095 xuống 0.012
-        // - Trên đại lộ (|X| > 4.25): Y = 0.012
+        // Calculate Y elevation and pitch angle according to Dragon Bridge ramp geometry:
+        // - On main bridge span (|X| <= 3.33): Y = 0.095
+        // - On approach ramp (3.33 < |X| <= 4.25): linear interpolation from 0.095 down to 0.012
+        // - On ground boulevard (|X| > 4.25): Y = 0.012
         const absX = Math.abs(veh.x);
         let y = 0.012;
         let pitch = 0.0;
@@ -1733,7 +1779,7 @@ export class CityEnvironment {
       }
     }
 
-    // Tăng độ sáng phản quang của các biển tên đường & giá long môn khi về đêm
+    // Increase retroreflective sign emission during night mode
     if (this.signMaterials && this.signMaterials.length > 0) {
       this.signMaterials.forEach(mat => {
         mat.emissiveIntensity = isNight ? 0.85 : 0.25;

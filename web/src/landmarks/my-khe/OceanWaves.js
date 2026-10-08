@@ -1,29 +1,40 @@
 import * as THREE from 'three';
 
 /**
- * OceanWaves: Hệ thống sóng biển động chân thực cho Biển Mỹ Khê (Đà Nẵng)
- * 
- * Tái hiện chân thực vẻ đẹp bãi biển quyến rũ nhất hành tinh:
- * 1. Các đợt sóng biển Gerstner đa tầng cuộn từ đại dương bao la tiến dần vào bờ cát.
- * 2. Dải bọt sóng trắng xóa (Breaking Wave Foam Crests) trào bọt và dạt dào vỗ bờ.
- * 3. Hiệu ứng sóng liếm bờ cát (Shoreline Wash) mở rộng và thu hẹp nhịp nhàng theo chu kỳ thủy triều.
- * 4. Chuyển màu nước biển chân thực: Xanh ngọc bích (Turquoise) trong vắt ven bờ chuyển sang xanh lam thẳm (Deep Sapphire) ngoài khơi.
- * 5. Đàn chim hải âu chao lượn trên bầu trời biển Mỹ Khê.
+ * OceanWaves: Dynamic oceanic simulation for My Khe Beach:
+ * 1. Multi-frequency Gerstner wave displacement grid with depth attenuation.
+ * 2. Cascading breaking wave foam crests sweeping onto the sand shoreline.
+ * 3. Tidal shoreline wash pulsation.
+ * 4. Animated flock of coastal seagulls soaring over the surf.
  */
 export class OceanWaves {
-  constructor(origin = { x: 20.65, y: 0.0, z: 0.45 }) {
+  /**
+   * @param {{x: number, y: number, z: number}} [origin] - World coordinates of beach center
+   */
+  constructor(origin = { x: 20.65, y: 0.0, z: 0.0 }) {
     this.group = new THREE.Group();
     this.origin = origin;
     this.seagulls = [];
+    this.waveIntensity = 1.0;
 
     this._createDynamicOceanSurface();
     this._createShorelineFoamLayers();
     this._createSeagulls();
   }
 
+  /**
+   * Sets the intensity multiplier for wave displacement and surge.
+   * @param {number} [val]
+   */
+  setWaveIntensity(val = 1.0) {
+    this.waveIntensity = val;
+  }
+
+  /**
+   * Generates the multi-segment ocean water mesh with PBR physical properties.
+   * @private
+   */
   _createDynamicOceanSurface() {
-    // Mặt nước biển trải dài dọc toàn bộ bờ biển phía Đông từ Bán đảo Sơn Trà / Phạm Văn Đồng đến An Thượng
-    // Chiều dài dọc bờ biển: 24.0 units (2.4 km), chiều rộng ra khơi: 4.8 units (480m)
     this.oceanWidth = 4.8;
     this.oceanLength = 24.0;
     this.oceanSegmentsX = 48;
@@ -37,25 +48,22 @@ export class OceanWaves {
     );
     geo.rotateX(-Math.PI / 2);
 
-    // Lưu vị trí gốc của các đỉnh để tính toán dao động sóng
     this.basePositions = geo.attributes.position.array.slice();
 
-    // Vật liệu nước biển PBR với độ trong suốt và phản chiếu cao
     this.oceanMat = new THREE.MeshPhysicalMaterial({
-      color: 0x0fa8b8,          // Xanh ngọc bích quyến rũ
+      color: 0x0fa8b8,          // Radiant turquoise
       emissive: new THREE.Color(0x022535),
       emissiveIntensity: 0.15,
       roughness: 0.12,
       metalness: 0.15,
-      transmission: 0.55,       // Độ trong suốt ánh nước
-      ior: 1.333,               // Khúc xạ nước
+      transmission: 0.55,       // Water transparency
+      ior: 1.333,               // Water index of refraction
       transparent: true,
       opacity: 0.92,
       depthWrite: true
     });
 
     this.oceanMesh = new THREE.Mesh(geo, this.oceanMat);
-    // Đặt tâm mặt biển ở phía Đông bãi cát Mỹ Khê
     this.oceanMesh.position.set(
       this.origin.x + 3.10,
       this.origin.y + 0.008,
@@ -65,10 +73,12 @@ export class OceanWaves {
     this.group.add(this.oceanMesh);
   }
 
+  /**
+   * Creates breaking foam crests and shoreline wash layers.
+   * @private
+   */
   _createShorelineFoamLayers() {
     this.foamGroup = new THREE.Group();
-
-    // 4 dải bọt sóng trắng song song di chuyển nối tiếp nhau đánh vào bờ
     this.foamCount = 4;
     this.foamWaves = [];
 
@@ -99,7 +109,7 @@ export class OceanWaves {
       });
     }
 
-    // Dải bọt sóng bờ cát (Shoreline wash) dạt lên bãi cát ẩm
+    // Tidal shoreline wash on the wet sand
     const washGeo = new THREE.PlaneGeometry(0.26, 23.6, 1, 120);
     washGeo.rotateX(-Math.PI / 2);
     this.washMat = new THREE.MeshStandardMaterial({
@@ -117,15 +127,18 @@ export class OceanWaves {
     this.group.add(this.foamGroup);
   }
 
+  /**
+   * Generates low-poly animated seagulls flying above the shoreline.
+   * @private
+   */
   _createSeagulls() {
     const gullGroup = new THREE.Group();
     const gullMat = new THREE.MeshBasicMaterial({ color: 0xf5f8fa, side: THREE.DoubleSide });
-
     const numGulls = 8;
+
     for (let i = 0; i < numGulls; i++) {
       const bird = new THREE.Group();
 
-      // Cánh chim hải âu dạng chữ V uốn lượn
       const wingGeo = new THREE.BufferGeometry();
       const wSpan = 0.045;
       const verts = new Float32Array([
@@ -159,83 +172,85 @@ export class OceanWaves {
     this.group.add(gullGroup);
   }
 
+  /**
+   * Adjusts materials for nighttime lighting.
+   * @param {boolean} isNight
+   */
+  setNightMode(isNight) {
+    if (this.oceanMat) {
+      if (isNight) {
+        this.oceanMat.color.setHex(0x041824);
+        this.oceanMat.emissive.setHex(0x010810);
+        this.oceanMat.emissiveIntensity = 0.05;
+        this.oceanMat.roughness = 0.22;
+      } else {
+        this.oceanMat.color.setHex(0x0fa8b8);
+        this.oceanMat.emissive.setHex(0x022535);
+        this.oceanMat.emissiveIntensity = 0.15;
+        this.oceanMat.roughness = 0.12;
+      }
+    }
+  }
+
+  /**
+   * Per-frame simulation update.
+   * @param {number} time
+   * @param {number} [delta]
+   */
   update(time, delta = 0.016) {
-    // 1. Cập nhật sóng biển nhấp nhô 3D (Multi-frequency Ocean Waves)
+    // 1. Dynamic Gerstner ocean surface deformation
     if (this.oceanMesh) {
       const pos = this.oceanMesh.geometry.attributes.position;
       const count = pos.count;
+      const intens = this.waveIntensity;
 
       for (let i = 0; i < count; i++) {
-        const u = this.basePositions[i * 3];     // Trục X (Đông - Tây)
-        const v = this.basePositions[i * 3 + 2]; // Trục Z (Bắc - Nam)
+        const u = this.basePositions[i * 3];     // X axis (East-West)
+        const v = this.basePositions[i * 3 + 2]; // Z axis (North-South)
 
-        // Sóng truyền từ ngoài khơi (X dương) dạt vào bờ cát (X âm)
-        // Độ cao sóng (wave amplitude) tự nhiên tăng nhẹ khi tiến vào vùng nước nông ven bờ
+        // Wave amplitude naturally steepens in shallow waters approaching shore
         const depthFactor = Math.max(0.6, 1.4 - (u + 1.8) * 0.25);
 
-        const wave1 = Math.sin(u * 8.5 - time * 2.4 + v * 1.5) * 0.022 * depthFactor;
-        const wave2 = Math.sin(u * 14.0 - time * 3.6 + v * 3.2) * 0.011;
-        const wave3 = Math.cos(v * 4.5 + time * 1.8) * 0.008;
+        const wave1 = Math.sin(u * 8.5 - time * 2.4 * intens + v * 1.5) * 0.022 * depthFactor * intens;
+        const wave2 = Math.sin(u * 14.0 - time * 3.6 * intens + v * 3.2) * 0.011 * intens;
+        const wave3 = Math.cos(v * 4.5 + time * 1.8 * intens) * 0.008 * intens;
 
         pos.setY(i, wave1 + wave2 + wave3);
       }
       pos.needsUpdate = true;
     }
 
-    // 2. Cập nhật các dải bọt sóng cuộn bờ (Breaking Foam Crests)
+    // 2. Cascade breaking foam crests rolling ashore
     if (this.foamWaves) {
       this.foamWaves.forEach(foam => {
-        // Chu kỳ di chuyển của từng con sóng dạt vào bờ
-        const cycle = ((time * foam.speed + foam.baseOffset) % 2.4) / 2.4; // 0.0 -> 1.0
-        // Sóng tiến từ X = 20.65 + 2.20 xuống bờ cát X = 20.65 + 0.74
+        const cycle = ((time * foam.speed + foam.baseOffset) % 2.4) / 2.4;
         const waveX = (this.origin.x + 2.20) - cycle * 1.46;
         foam.mesh.position.set(waveX, 0.012 + Math.sin(cycle * Math.PI) * 0.008, this.origin.z);
 
-        // Bọt sóng rõ nhất khi chuẩn bị vỗ vào bờ (cuối chu kỳ)
         const opacity = Math.sin(cycle * Math.PI) * 0.85;
         foam.mesh.material.opacity = Math.max(0.0, opacity);
       });
     }
 
-    // 3. Sóng liếm bờ cát ẩm (Shoreline Wash pulsating)
+    // 3. Shoreline wash pulsation
     if (this.washMesh) {
       const washT = Math.sin(time * 1.6);
-      // Mép sóng tiến lùi trên bãi cát
       this.washMesh.position.x = this.origin.x + 0.74 - washT * 0.06;
       this.washMat.opacity = 0.45 + washT * 0.35;
     }
 
-    // 4. Cập nhật chim hải âu chao lượn trên bầu trời biển
+    // 4. Seagull circular soaring & wing flapping
     if (this.seagulls) {
-      this.seagulls.forEach(gull => {
-        gull.angle += gull.speed * delta;
+      this.seagulls.forEach((gull, idx) => {
+        gull.angle += delta * gull.speed;
         gull.group.position.x = gull.center.x + Math.cos(gull.angle) * gull.radius;
-        gull.group.position.z = gull.center.z + Math.sin(gull.angle) * (gull.radius * 0.65);
-        gull.group.position.y = gull.baseY + Math.sin(time * 2.0 + gull.angle) * 0.08;
-
-        // Xoay hướng bay theo tiếp tuyến quỹ đạo
+        gull.group.position.z = gull.center.z + Math.sin(gull.angle) * gull.radius * 0.6;
+        gull.group.position.y = gull.baseY + Math.sin(time * 2.0 + idx) * 0.04;
         gull.group.rotation.y = -gull.angle + Math.PI / 2;
-        // Đập cánh
-        gull.group.rotation.z = Math.sin(time * 6.5) * 0.22;
+
+        const flap = Math.sin(time * 8.0 + idx * 1.5) * 0.35;
+        gull.wingMesh.rotation.z = flap;
       });
     }
-  }
-
-  setNightMode(isNight) {
-    if (this.oceanMat) {
-      if (isNight) {
-        this.oceanMat.color.setHex(0x06283d);
-        this.oceanMat.emissive.setHex(0x02111d);
-        this.oceanMat.roughness = 0.08;
-      } else {
-        this.oceanMat.color.setHex(0x0fa8b8);
-        this.oceanMat.emissive.setHex(0x022535);
-        this.oceanMat.roughness = 0.12;
-      }
-    }
-  }
-
-  addTo(scene) {
-    scene.add(this.group);
   }
 }
